@@ -1,0 +1,15 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/nba_comp_dashboard"
+    ],
+    "files.exclude": {
+        "**/.venv": true,
+        "**/__pycache__": true
+    },
+    "search.exclude": {
+        "**/.venv": true,
+        "**/__pycache__": true
+    }
+}

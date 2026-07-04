@@ -24,6 +24,14 @@ This notebook creates a one-page player development profile. It compares a selec
 
 The goal is to turn player statistics into a more scout-friendly development snapshot.
 
+### NBA Comp Dashboard
+
+- App scaffold: `nba_comp_dashboard/`
+
+This upcoming Streamlit app will let users enter a position and skill percentiles, then generate NBA player-season comps, a radar chart, an archetype card, and a compact comparison table.
+
+The dashboard is intended to turn the player similarity report logic into a more interactive, user-facing experience.
+
 ## Practice
 
 The `Practice/` folder is for exploratory work and skill-building. It currently includes a team profile scouting demo notebook and a sample Celtics snapshot image. These files are separate from the main report tools and are mainly used for experimenting with ideas, visuals, and basketball analytics workflows.
@@ -46,6 +54,7 @@ Data is pulled from NBA Stats endpoints through `nba_api`. Generated report exam
 .
 ├── nba_team_1page_style_report.ipynb
 ├── nba_player_similarity_development_report.ipynb
+├── nba_comp_dashboard/
 ├── team_style_1page_pdf_reports/
 ├── player_development_reports/
 └── Practice/

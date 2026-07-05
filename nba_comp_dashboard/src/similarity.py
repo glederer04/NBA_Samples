@@ -121,6 +121,8 @@ def find_similar_players(
     output_columns = [
         column for column in DISPLAY_COLUMNS if column in scored_df.columns
     ] + [
+        column for column in SIMILARITY_COLUMNS if column in scored_df.columns
+    ] + [
         "DISTANCE",
         "SIMILARITY_SCORE",
     ]

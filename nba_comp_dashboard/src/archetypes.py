@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Dict, List, Union
+from typing import Dict, List, TypedDict, Union
 
 PercentileValue = Union[int, float]
 PercentileDict = Dict[str, PercentileValue]
 
+class ArchetypeSummary(TypedDict):
+    archetype: str
+    strengths: List[str]
+    development_areas: List[str]
 
 def get_top_skills(percentiles: PercentileDict, n: int = 3) -> List[str]:
     """Return the user's strongest skill areas."""
@@ -148,7 +152,7 @@ def choose_archetype(
 def build_archetype_summary(
     position: str,
     percentiles: PercentileDict,
-) -> Dict[str, object]:
+) -> ArchetypeSummary:
     """Create a small archetype summary for the dashboard."""
     top_skills = get_top_skills(percentiles)
     development_areas = get_development_areas(percentiles)

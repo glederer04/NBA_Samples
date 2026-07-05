@@ -38,10 +38,10 @@ DISPLAY_COLUMNS = [
 
 
 POSITION_TO_PROFILE_GROUP = {
-    "PG": "Guard",
-    "SG": "Guard",
-    "SF": "Wing",
-    "PF": "Forward",
+    "PG": "Guard/Wing",
+    "SG": "Guard/Wing",
+    "SF": "Guard/Wing",
+    "PF": "Big",
     "C": "Big",
 }
 

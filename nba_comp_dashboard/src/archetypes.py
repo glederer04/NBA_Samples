@@ -140,10 +140,10 @@ def choose_archetype(
     if position in {"PG", "SG"}:
         return choose_guard_archetype(percentiles)
 
-    if position in {"SF", "PF"}:
+    if position == "SF":
         return choose_wing_archetype(percentiles)
 
-    if position == "C":
+    if position in {"PF", "C"}:
         return choose_big_archetype(percentiles)
 
     return "Balanced Player"

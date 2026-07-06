@@ -1,42 +1,44 @@
 # NBA Player Comp Dashboard
 
-Interactive Streamlit dashboard that lets users build a custom basketball player profile and find similar NBA player-season comps.
+Live app: https://lederer-nbasamples-player-comp.streamlit.app
 
-Users will enter their position and skill percentiles, then the app will return a closest NBA comparison, a radar chart, an archetype-style player card, and a small table of similar player seasons.
+This is an interactive Streamlit dashboard where users build a custom basketball profile and get NBA player-season comps.
 
-## App Concept
+Users choose a position type, enter skill percentiles, and the app returns:
 
-The dashboard turns the player similarity logic from the main notebook into a fun user-facing experience.
+- Closest NBA player comp
+- Radar/spider chart
+- Archetype-style role card
+- Similar player-season table
+- Option to view 5, 10, or 25 comps
 
-A user can answer:
+The percentiles are meant to be relative to the people a user actually plays with, such as pickup games, school team, rec league, or workout group. They are not meant to be NBA-level self-ratings.
 
-- What position do I play?
-- How strong am I as a scorer, shooter, passer, rebounder, defender, and finisher?
-- Which NBA player-season does my profile most closely resemble?
+## Run Locally
 
-The app will then show:
+From the repository root:
 
-- Top NBA player comp
-- Top 5-10 similar player seasons
-- Radar/spider chart of the user profile
-- 2K-style archetype card
-- Short strengths and development areas summary
+```bash
+streamlit run nba_comp_dashboard/app.py
+```
 
-## Planned Structure
+## Project Structure
 
 ```text
 nba_comp_dashboard/
 ├── app.py
-├── README.md
 ├── requirements.txt
 ├── data/
 │   ├── README.md
 │   └── player_similarity_profiles.csv
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py
-│   ├── similarity.py
-│   ├── archetypes.py
-│   └── charts.py
-└── assets/
-    └── dashboard_preview.png
+└── src/
+    ├── __init__.py
+    ├── archetypes.py
+    ├── charts.py
+    ├── data_loader.py
+    └── similarity.py
+```
+
+## Notes
+
+The app uses a local CSV export instead of calling the NBA API each time it runs. This keeps the dashboard faster and easier to deploy on Streamlit Community Cloud.

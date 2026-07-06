@@ -14,14 +14,6 @@ Users choose a position type, enter skill percentiles, and the app returns:
 
 The percentiles are meant to be relative to the people a user actually plays with, such as pickup games, school team, rec league, or workout group. They are not meant to be NBA-level self-ratings.
 
-## Run Locally
-
-From the repository root:
-
-```bash
-streamlit run nba_comp_dashboard/app.py
-```
-
 ## Project Structure
 
 ```text

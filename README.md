@@ -4,9 +4,9 @@ This repository is a small NBA analytics portfolio focused on turning basketball
 
 The work here uses Python to pull, clean, analyze, and present NBA data in a way that is readable for scouting, player development, and portfolio review.
 
-## Live Project
+## Live Dashboards
 
-### NBA Player Comp Dashboard
+### NBA Player Comp
 
 - Live app: https://lederer-nbasamples-player-comp.streamlit.app
 - Code: `nba_comp_dashboard/`
@@ -17,7 +17,7 @@ Users enter their basketball position type and skill percentiles, then the app r
 
 The dashboard builds on the player similarity work from the development report notebook and turns it into a more fun, user-facing experience.
 
-## Other Projects
+## PDF Report Generators
 
 ### Team Style One-Page Report
 

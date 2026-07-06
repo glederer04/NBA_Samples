@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Union, cast
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 from src.archetypes import ArchetypeSummary, build_archetype_summary
@@ -52,6 +53,10 @@ def add_page_styles() -> None:
     st.markdown(
         """
         <style>
+        .block-container {
+            padding-top: 1.25rem;
+        }
+
         [data-testid="stSidebarCollapseButton"],
         [data-testid="collapsedControl"] {
             display: none;
@@ -66,33 +71,144 @@ def add_page_styles() -> None:
             padding-bottom: 0.1rem;
         }
 
+        h1 {
+            margin-top: 0;
+            padding-top: 0;
+        }
+
         .main-result {
             border: 1px solid rgba(148, 163, 184, 0.35);
             border-radius: 8px;
-            padding: 1.15rem 1.35rem;
+            padding: 1rem 1.25rem;
             background: linear-gradient(135deg, #111827 0%, #1f2937 58%, #7c2d12 100%);
             color: white;
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
         }
 
         .main-result-label {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: #cbd5e1;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .main-result-title {
-            font-size: 1.9rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 0.35rem;
+            line-height: 1.08;
+            margin-bottom: 0.3rem;
         }
 
         .main-result-subtitle {
-            font-size: 1rem;
+            font-size: 0.98rem;
             color: #e5e7eb;
+        }
+
+        div[data-testid="stDivider"] {
+            margin-top: -0.45rem !important;
+            margin-bottom: -0.65rem !important;
+        }
+
+        div[data-testid="stDivider"] hr {
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.15rem !important;
+        }
+
+        .overall-box {
+            background: linear-gradient(135deg, #f97316 0%, #facc15 100%);
+            border: 2px solid rgba(255, 255, 255, 0.24);
+            border-radius: 8px;
+            box-shadow: 0 10px 22px rgba(249, 115, 22, 0.26);
+            padding: 0.7rem 0.55rem;
+            text-align: center;
+        }
+
+        .overall-label {
+            color: #111827;
+            font-size: 0.82rem !important;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+        }
+
+        .overall-value {
+            color: #111827;
+            font-size: 2.45rem !important;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .rating-label {
+            color: #f9fafb;
+            font-size: 1rem;
+            font-weight: 850;
+            line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+
+        .rating-value {
+            color: #f9fafb;
+            font-size: 1rem;
+            font-weight: 950;
+            line-height: 1;
+            margin-bottom: 0.35rem;
+            text-align: right;
+        }
+
+        .footer-value {
+            color: #f9fafb;
+            font-size: 1.25rem !important;
+            font-weight: 850;
+            line-height: 1;
+            margin-top: -0.75rem !important;
+            margin-bottom: -0.2rem !important;
+        }
+
+        div[data-testid="stProgress"] {
+            margin-top: -0.35rem;
+            margin-bottom: -0.42rem;
+        }
+
+        div[data-testid="stProgress"] > div {
+            height: 0.45rem;
+        }
+
+        div[data-testid="stMetric"] {
+            background: linear-gradient(135deg, #f97316 0%, #facc15 100%);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
+            padding: 0.55rem 0.5rem;
+            text-align: center;
+        }
+
+        div[data-testid="stMetric"] label {
+            color: #111827;
+            display: flex;
+            font-weight: 900;
+            justify-content: center;
+            letter-spacing: 0.08em;
+            text-align: center;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        div[data-testid="stMetricValue"] {
+            color: #111827;
+            display: flex;
+            font-size: 2rem;
+            font-weight: 950;
+            justify-content: center;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
+        }
+
+        div[data-testid="stTable"] th {
+            text-align: center !important;
         }
         </style>
         """,
@@ -165,23 +281,18 @@ def get_card_ratings(
 
 def get_role_summary(
     position_profile: str,
-    archetype: str,
     comp_record: CompRecord,
     ratings: Dict[str, int],
 ) -> str:
-    """Create a short role summary for the player card."""
-    best_trait = max(ratings, key=lambda rating: ratings[rating])
+    """Create a short role summary from the user build and closest comp."""
+    sorted_traits = sorted(ratings, key=lambda rating: ratings[rating], reverse=True)
+    best_trait = sorted_traits[0]
+    second_trait = sorted_traits[1]
     comp_name = str(comp_record["PLAYER_NAME"])
 
-    if position_profile == "Big":
-        return (
-            f"{archetype} profile with {best_trait.lower()} as the clearest role signal. "
-            f"The comp base is built from {comp_name}'s frontcourt profile."
-        )
-
     return (
-        f"{archetype} profile with {best_trait.lower()} driving the match. "
-        f"The comp base is built from {comp_name}'s perimeter profile."
+        f"Your inputs and {comp_name}'s match point toward a {best_trait.lower()}-first "
+        f"{position_profile.lower()} with {second_trait.lower()} as the support skill."
     )
 
 
@@ -191,8 +302,8 @@ def render_intro() -> None:
     st.markdown(
         """
         Build a quick player profile, then see which NBA player-seasons your game most closely matches.
-        Use the sliders as percentiles relative to the people you actually play with, like your pickup runs,
-        rec league, school team, or workout group. Do not rate yourself as if you were already in the NBA.
+        Use the sliders as percentiles relative to the people you actually play with, like pickup runs,
+        rec league, school team, or your workout group.
         """
     )
 
@@ -228,34 +339,49 @@ def render_player_card(
     ratings = get_card_ratings(percentiles, top_comp)
     overall = round(sum(ratings.values()) / len(ratings))
     archetype = str(archetype_summary["archetype"])
-    role_summary = get_role_summary(position_profile, archetype, top_comp, ratings)
+    role_summary = get_role_summary(position_profile, top_comp, ratings)
 
     with st.container(border=True):
-        title_col, ovr_col = st.columns([0.68, 0.32])
+        title_col, overall_col = st.columns([0.72, 0.28], vertical_alignment="center")
 
         with title_col:
             st.caption(f"{position_profile.upper()} ROLE CARD")
             st.subheader(archetype)
-            st.write(role_summary)
+            st.caption(role_summary)
 
-        with ovr_col:
-            st.metric("OVR", overall)
+        with overall_col:
+            st.metric("Overall", overall)
 
-        st.caption("Role Attribute Bars")
+        st.divider()
 
         for label, value in ratings.items():
-            text_col, number_col = st.columns([0.75, 0.25])
-            text_col.write(label)
-            number_col.write(f"**{value}**")
+            label_col, value_col = st.columns([0.78, 0.22], vertical_alignment="bottom")
+
+            with label_col:
+                st.markdown(f'<p class="rating-label">{label}</p>', unsafe_allow_html=True)
+
+            with value_col:
+                st.markdown(f'<p class="rating-value">{value}</p>', unsafe_allow_html=True)
+
             st.progress(value / 100)
 
         st.divider()
 
-        st.caption("Signature Skill")
-        st.write(f"**{get_top_skill(percentiles)}**")
+        footer_col_1, footer_col_2 = st.columns(2)
 
-        st.caption("Comp Base")
-        st.write(f"**{str(top_comp['PLAYER_NAME'])}**")
+        with footer_col_1:
+            st.caption("Signature Skill")
+            st.markdown(
+                f'<p class="footer-value">{get_top_skill(percentiles)}</p>',
+                unsafe_allow_html=True,
+            )
+
+        with footer_col_2:
+            st.caption("Comp Base")
+            st.markdown(
+                f'<p class="footer-value">{str(top_comp["PLAYER_NAME"])}</p>',
+                unsafe_allow_html=True,
+            )
 
 
 def build_comp_options(comps_df: pd.DataFrame) -> Dict[str, int]:
@@ -359,11 +485,11 @@ def style_comps_table(display_df: pd.DataFrame) -> pd.DataFrame:
     for column in display_df.columns:
         styles[column] = "text-align: center;"
 
+    styles["Player"] = "text-align: left;"
+    styles["Age"] = "text-align: left !important;"
     styles["Similarity"] = (
-        "background-color: #DBEAFE; color: #111827; font-weight: 800; "
-        "text-align: center;"
+        "background-color: #d14f0f; color: #111827; font-weight: 800; text-align: center !important;"
     )
-    styles["Age"] = "text-align: left;"
 
     return styles
 
@@ -379,6 +505,35 @@ def get_comp_percentiles(comp_record: CompRecord) -> PercentileDict:
         column: float(comp_record[column])
         for column in SIMILARITY_COLUMNS
     }
+
+
+def style_radar_chart_ticks(radar_fig: go.Figure) -> go.Figure:
+    """Style radar chart labels and grid."""
+    radar_fig.update_layout(
+        font=dict(color="#f9fafb"),
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                tickvals=[0, 25, 50, 75, 100],
+                showticklabels=True,
+                tickfont=dict(color="#111827", size=11),
+                gridcolor="rgba(17, 24, 39, 0.35)",
+                linecolor="rgba(17, 24, 39, 0.45)",
+            ),
+            angularaxis=dict(
+                visible=True,
+                showticklabels=True,
+                tickfont=dict(color="#f9fafb", size=13),
+                gridcolor="rgba(17, 24, 39, 0.25)",
+                linecolor="rgba(17, 24, 39, 0.45)",
+            ),
+        ),
+    )
+
+    return radar_fig
 
 
 def main() -> None:
@@ -481,6 +636,8 @@ def main() -> None:
                     title="Your Build vs Selected NBA Comp",
                 )
 
+            radar_fig = style_radar_chart_ticks(radar_fig)
+
             st.plotly_chart(
                 radar_fig,
                 use_container_width=True,
@@ -505,14 +662,25 @@ def main() -> None:
         st.caption("Ranked from most similar to least similar based on your selected build.")
 
         display_df = format_comps_table(comps_df)
+        display_df.index = range(1, len(display_df) + 1)
         styled_df = (
             display_df.style.apply(style_comps_table, axis=None)
+            .hide(axis="index")
             .set_table_styles(
                 [
                     {
                         "selector": "th",
-                        "props": [("text-align", "center")],
-                    }
+                        "props": [
+                            ("text-align", "center"),
+                            ("font-weight", "800"),
+                        ],
+                    },
+                    {
+                        "selector": "td",
+                        "props": [
+                            ("vertical-align", "middle"),
+                        ],
+                    },
                 ]
             )
             .format(
@@ -528,11 +696,7 @@ def main() -> None:
             )
         )
 
-        st.dataframe(
-            styled_df,
-            width="stretch",
-            hide_index=True,
-        )
+        st.table(styled_df)
 
     except FileNotFoundError:
         st.info(

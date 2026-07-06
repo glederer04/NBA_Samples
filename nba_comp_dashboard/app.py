@@ -659,7 +659,7 @@ def main() -> None:
         comps_df = max_comps_df.head(top_n).reset_index(drop=True)
 
         st.subheader("NBA Player Comps")
-        st.caption("Ranked from most similar to least similar based on your selected build.")
+        st.caption("Ranked from most similar to least similar based on your selected build. PTS/REB/AST are per-100 possessions.")
 
         display_df = format_comps_table(comps_df)
         display_df.index = range(1, len(display_df) + 1)

@@ -304,6 +304,7 @@ def render_intro() -> None:
         Build a quick player profile, then see which NBA player-seasons your game most closely matches.
         Use the sliders as percentiles relative to the people you actually play with, like pickup runs,
         rec league, school team, or your workout group.
+        Player data from the past 50 NBA seasons is used to find the closest comps, and the top 5-25 comps are displayed in a table at the bottom.
         """
     )
 

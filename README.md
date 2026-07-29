@@ -1,5 +1,7 @@
 # NBA Samples
 
+This is an active work in progress, with more reports, tools, and improvements continuing to be added.
+
 This repository is a small NBA analytics portfolio focused on turning basketball data into useful reports, visuals, and interactive tools.
 
 The work here uses Python to pull, clean, analyze, and present NBA data in a way that is readable for scouting, player development, and portfolio review.

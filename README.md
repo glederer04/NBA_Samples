@@ -21,6 +21,15 @@ The dashboard builds on the player similarity work from the development report n
 
 ## PDF Report Generators
 
+### Pregame Gameplan Report
+
+- Code: `nba_pregame_gameplan_report.ipynb`
+- Sample PDFs: `pregame_gameplan_reports/`
+
+This notebook builds a one-page, landscape pregame gameplan report for a selected team and opponent. It trains a pregame win-probability model using only information available before tipoff, then turns the matchup into coach-facing goals for efficiency, turnovers, rebounding, free throws, 3-point volume, and pace.
+
+The report includes team branding, current records and ranks, matchup-specific goal cards, a clean metric comparison table, and a goal pressure map that compares each team by blended season and recent-form percentile.
+
 ### Team Style One-Page Report
 
 - Code: `nba_team_1page_style_report.ipynb`
@@ -45,14 +54,17 @@ This repo uses Python libraries such as:
 - `nba_api`
 - `matplotlib`
 - `Pillow`
+- `scikit-learn`
 
 ## Repository Structure
 
 ```text
 .
 ├── nba_comp_dashboard/
+├── nba_pregame_gameplan_report.ipynb
 ├── nba_team_1page_style_report.ipynb
 ├── nba_player_similarity_development_report.ipynb
+├── pregame_gameplan_reports/
 ├── team_style_1page_pdf_reports/
 ├── player_development_reports/
 └── Practice/

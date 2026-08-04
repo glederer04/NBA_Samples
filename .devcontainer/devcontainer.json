@@ -19,7 +19,7 @@
   },
   "updateContentCommand": "python -m venv .venv-devcontainer && .venv-devcontainer/bin/python -m pip install --upgrade pip && .venv-devcontainer/bin/python -m pip install -r nba_comp_dashboard/requirements.txt -e './nba_rotation_lab[dev]'",
   "postAttachCommand": {
-    "server": ".venv-devcontainer/bin/streamlit run nba_comp_dashboard/app.py --server.enableCORS false --server.enableXsrfProtection false"
+    "server": "if ! pgrep -f '[s]treamlit run nba_comp_dashboard/app.py' >/dev/null; then nohup .venv-devcontainer/bin/streamlit run nba_comp_dashboard/app.py --server.enableCORS false --server.enableXsrfProtection false </dev/null >/tmp/nba-comp-dashboard-streamlit.log 2>&1 & fi"
   },
   "portsAttributes": {
     "8501": {

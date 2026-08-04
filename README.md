@@ -10,6 +10,7 @@ The work here uses Python to pull, clean, analyze, and present NBA data in a way
 
 ### NBA Rotation Lab
 
+- Live app: https://glederer-nba-rotation-lab.onrender.com
 - Code and documentation: [`nba_rotation_lab/`](nba_rotation_lab/)
 - Application framework: Dash and Plotly
 - Data layer: DuckDB and SQL

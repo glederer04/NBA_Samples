@@ -3,6 +3,8 @@
 
 An end-to-end NBA lineup and rotation decision-support system built with Python, DuckDB, SQL, Dash, Plotly, and ReportLab.
 
+[Open the live NBA Rotation Lab](https://glederer-nba-rotation-lab.onrender.com)
+
 NBA Rotation Lab converts rotation stints, play-by-play events, game results, and player box scores into coach-facing lineup analysis, game reports, sample-adjusted recommendations, and interactive rotation scenarios.
 
 ## Project Objective

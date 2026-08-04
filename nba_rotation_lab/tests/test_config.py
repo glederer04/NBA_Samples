@@ -2,9 +2,10 @@
 
 from pathlib import Path
 
+import pytest
+
 from rotation_lab.config import (
     DEFAULT_DATABASE_PATH,
-    PROJECT_ROOT,
     resolve_database_path,
 )
 
@@ -15,12 +16,17 @@ def test_resolve_database_path_uses_local_default() -> None:
     assert resolve_database_path("") == DEFAULT_DATABASE_PATH
 
 
-def test_resolve_database_path_handles_project_relative_override() -> None:
-    """A relative production path should resolve from the project root."""
+def test_resolve_database_path_handles_working_directory_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A relative production path should resolve from the working directory."""
+
+    monkeypatch.chdir(tmp_path)
 
     result = resolve_database_path("data/demo/rotation_lab.duckdb")
 
-    assert result == (PROJECT_ROOT / "data/demo/rotation_lab.duckdb").resolve()
+    assert result == (tmp_path / "data/demo/rotation_lab.duckdb").resolve()
 
 
 def test_resolve_database_path_preserves_absolute_override(

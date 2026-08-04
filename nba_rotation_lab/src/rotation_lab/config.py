@@ -24,7 +24,7 @@ DEMO_DATABASE_PATH = DEMO_DATABASE_DIR / "rotation_lab.duckdb"
 def resolve_database_path(
     configured_path: str | None = None,
 ) -> Path:
-    """Resolve the configured database path against the project root."""
+    """Resolve an override from the process working directory."""
 
     path_value = configured_path
 
@@ -37,7 +37,7 @@ def resolve_database_path(
     database_path = Path(path_value).expanduser()
 
     if not database_path.is_absolute():
-        database_path = PROJECT_ROOT / database_path
+        database_path = Path.cwd() / database_path
 
     return database_path.resolve()
 

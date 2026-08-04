@@ -4,11 +4,14 @@ from pathlib import Path
 
 import duckdb
 import pandas as pd
+import pytest
 
 from rotation_lab.config import SQL_DIR
 from rotation_lab.database import initialize_database
 from rotation_lab.ingest.rotation_stints import (
+    RotationDataUnavailableError,
     calculate_period,
+    fetch_rotation_stints,
     load_rotation_stints,
     normalize_rotation_stints,
 )
@@ -82,6 +85,33 @@ def test_calculate_period_supports_regulation_and_overtime() -> None:
     assert calculate_period(21600) == 4
     assert calculate_period(28800) == 5
     assert calculate_period(31800) == 6
+
+
+def test_fetch_rotation_stints_reports_empty_nba_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty NBA response should become an actionable availability error."""
+
+    class EmptyResponse:
+        def get_response(self) -> str:
+            return ""
+
+        def valid_json(self) -> bool:
+            return False
+
+    def fake_send_api_request(*args, **kwargs):
+        return EmptyResponse()
+
+    monkeypatch.setattr(
+        "rotation_lab.ingest.rotation_stints.NBAStatsHTTP.send_api_request",
+        fake_send_api_request,
+    )
+
+    with pytest.raises(
+        RotationDataUnavailableError,
+        match="empty rotation response",
+    ):
+        fetch_rotation_stints("0022500082")
 
 
 def test_normalize_rotation_stints() -> None:

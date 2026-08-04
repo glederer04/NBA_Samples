@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 from nba_api.stats.endpoints import gamerotation
+from nba_api.stats.library.http import NBAStatsHTTP
 
 from rotation_lab.config import DATABASE_PATH
 from rotation_lab.database import connect_database
@@ -43,6 +44,10 @@ REQUIRED_ROTATION_COLUMNS = {
     "PT_DIFF",
     "USG_PCT",
 }
+
+
+class RotationDataUnavailableError(RuntimeError):
+    """Raised when NBA Stats returns no rotation payload for a game."""
 
 
 def calculate_period(in_time_deciseconds: int) -> int:
@@ -174,7 +179,28 @@ def fetch_rotation_stints(game_id: str) -> pd.DataFrame:
         game_id=game_id,
         league_id="00",
         timeout=NBA_API_TIMEOUT_SECONDS,
+        get_request=False,
     )
+
+    nba_response = NBAStatsHTTP().send_api_request(
+        endpoint=response.endpoint,
+        parameters=response.parameters,
+        proxy=response.proxy,
+        headers=response.headers,
+        timeout=response.timeout,
+    )
+    response_body = nba_response.get_response()
+
+    if not response_body.strip():
+        raise RotationDataUnavailableError(
+            f"NBA Stats returned an empty rotation response for game {game_id}"
+        )
+
+    if not nba_response.valid_json():
+        raise RuntimeError(f"NBA Stats returned an invalid rotation response for game {game_id}")
+
+    response.nba_response = nba_response
+    response.load_response()
 
     away_team, home_team = response.get_data_frames()
 

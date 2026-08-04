@@ -13,6 +13,7 @@ from rotation_lab.ingest.config import (
     NBA_API_RETRY_DELAY_SECONDS,
 )
 from rotation_lab.ingest.rotation_stints import (
+    RotationDataUnavailableError,
     load_rotation_stints,
 )
 
@@ -29,12 +30,14 @@ class RotationBatchResult:
     completed_games: int = 0
     loaded_rows: int = 0
     failed_game_ids: list[str] = field(default_factory=list)
+    unavailable_game_ids: list[str] = field(default_factory=list)
 
 
 def get_pending_rotation_game_ids(
     database_path: Path = DATABASE_PATH,
     team_abbreviation: str | None = None,
     limit: int | None = None,
+    include_unavailable: bool = False,
 ) -> list[str]:
     """Return box-score-covered games missing rotation data."""
 
@@ -58,6 +61,19 @@ def get_pending_rotation_game_ids(
         """,
     ]
     parameters: list[object] = []
+
+    if not include_unavailable:
+        conditions.append(
+            """
+            NOT EXISTS (
+                SELECT 1
+                FROM metadata.rotation_ingestion_status AS status
+                WHERE
+                    status.game_id = games.game_id
+                    AND status.status = 'unavailable'
+            )
+            """
+        )
 
     if team_abbreviation:
         normalized_team = team_abbreviation.strip().upper()
@@ -106,6 +122,52 @@ def get_pending_rotation_game_ids(
     return [str(row[0]) for row in rows]
 
 
+def record_unavailable_rotation_game(
+    game_id: str,
+    error_message: str,
+    database_path: Path = DATABASE_PATH,
+) -> None:
+    """Record a game whose NBA rotation payload is unavailable."""
+
+    connection = connect_database(database_path)
+
+    try:
+        connection.execute(
+            """
+            INSERT OR REPLACE INTO metadata.rotation_ingestion_status (
+                game_id,
+                status,
+                error_message,
+                last_attempted_at
+            )
+            VALUES (?, 'unavailable', ?, CURRENT_TIMESTAMP)
+            """,
+            [game_id, error_message],
+        )
+    finally:
+        connection.close()
+
+
+def clear_rotation_ingestion_status(
+    game_id: str,
+    database_path: Path = DATABASE_PATH,
+) -> None:
+    """Remove a prior unavailable marker after a successful retry."""
+
+    connection = connect_database(database_path)
+
+    try:
+        connection.execute(
+            """
+            DELETE FROM metadata.rotation_ingestion_status
+            WHERE game_id = ?
+            """,
+            [game_id],
+        )
+    finally:
+        connection.close()
+
+
 def default_rotation_loader(
     game_id: str,
     database_path: Path,
@@ -127,6 +189,7 @@ def ingest_rotation_game_ids(
     loader: RotationLoader = default_rotation_loader,
     sleeper: Sleeper = time.sleep,
     report_progress: ProgressReporter = print,
+    clear_unavailable_status_on_success: bool = False,
 ) -> RotationBatchResult:
     """Load rotation data with retry and pacing."""
 
@@ -159,6 +222,20 @@ def ingest_rotation_game_ids(
                 )
             except Exception as error:
                 if attempt == max_attempts:
+                    if isinstance(error, RotationDataUnavailableError):
+                        record_unavailable_rotation_game(
+                            game_id=game_id,
+                            error_message=str(error),
+                            database_path=database_path,
+                        )
+                        result.unavailable_game_ids.append(game_id)
+
+                        report_progress(
+                            f"Rotation data unavailable for game {game_id} "
+                            f"after {max_attempts} attempts; skipping"
+                        )
+                        break
+
                     result.failed_game_ids.append(game_id)
 
                     report_progress(f"Failed game {game_id} after {max_attempts} attempts: {error}")
@@ -167,6 +244,11 @@ def ingest_rotation_game_ids(
                 report_progress(f"Attempt {attempt} failed for {game_id}: {error}. Retrying.")
                 sleeper(retry_delay_seconds)
             else:
+                if clear_unavailable_status_on_success:
+                    clear_rotation_ingestion_status(
+                        game_id=game_id,
+                        database_path=database_path,
+                    )
                 result.completed_games += 1
                 result.loaded_rows += row_count
 

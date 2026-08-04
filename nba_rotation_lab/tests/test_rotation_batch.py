@@ -11,6 +11,7 @@ from rotation_lab.ingest.rotation_batch import (
     get_pending_rotation_game_ids,
     ingest_rotation_game_ids,
 )
+from rotation_lab.ingest.rotation_stints import RotationDataUnavailableError
 
 
 def seed_pending_rotation_data(
@@ -196,6 +197,47 @@ def test_ingest_rotation_game_ids_retries(
     }
     assert sleep_calls == [1.0, 0.5]
     assert any("Retrying" in message for message in progress_messages)
+
+
+def test_ingest_rotation_game_ids_records_unavailable_games(
+    tmp_path: Path,
+) -> None:
+    """Empty NBA payloads should be recorded and skipped by future batches."""
+
+    database_path = tmp_path / "test_rotation_lab.duckdb"
+    initialize_database(
+        database_path=database_path,
+        sql_directory=SQL_DIR,
+    )
+    seed_pending_rotation_data(database_path)
+
+    def unavailable_loader(
+        game_id: str,
+        loader_database_path: Path,
+    ) -> int:
+        raise RotationDataUnavailableError(
+            f"NBA Stats returned an empty rotation response for game {game_id}"
+        )
+
+    result = ingest_rotation_game_ids(
+        game_ids=["002"],
+        database_path=database_path,
+        max_attempts=2,
+        request_delay_seconds=0,
+        retry_delay_seconds=0,
+        loader=unavailable_loader,
+        sleeper=lambda seconds: None,
+        report_progress=lambda message: None,
+    )
+
+    assert result.completed_games == 0
+    assert result.failed_game_ids == []
+    assert result.unavailable_game_ids == ["002"]
+    assert get_pending_rotation_game_ids(database_path=database_path) == []
+    assert get_pending_rotation_game_ids(
+        database_path=database_path,
+        include_unavailable=True,
+    ) == ["002"]
 
 
 def test_rotation_coverage_summary(

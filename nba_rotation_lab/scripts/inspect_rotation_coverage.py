@@ -39,6 +39,13 @@ def main() -> None:
                 team_abbreviation
             """
         ).fetchall()
+        unavailable_result = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM metadata.rotation_ingestion_status
+            WHERE status = 'unavailable'
+            """
+        ).fetchone()
     finally:
         connection.close()
 
@@ -60,6 +67,8 @@ def main() -> None:
     print(f"  Complete games: {complete_games:,}")
     print(f"  Incomplete games: {incomplete_games:,}")
     print(f"  Missing games: {missing_games:,}")
+    unavailable_games = unavailable_result[0] if unavailable_result else 0
+    print(f"  Unavailable from NBA Stats: {unavailable_games:,}")
     print(f"  Coverage: {float(coverage_percentage):.2f}%")
 
     print("\nTeam rotation coverage:")

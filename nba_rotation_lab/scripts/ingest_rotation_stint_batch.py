@@ -44,6 +44,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=NBA_API_RETRY_DELAY_SECONDS,
     )
+    parser.add_argument(
+        "--retry-unavailable",
+        action="store_true",
+        help="Retry games previously marked as unavailable by NBA Stats.",
+    )
 
     return parser.parse_args()
 
@@ -57,6 +62,7 @@ def main() -> None:
         database_path=DATABASE_PATH,
         team_abbreviation=args.team,
         limit=args.limit,
+        include_unavailable=args.retry_unavailable,
     )
 
     if not pending_game_ids:
@@ -78,12 +84,14 @@ def main() -> None:
             max_attempts=args.max_attempts,
             request_delay_seconds=args.request_delay,
             retry_delay_seconds=args.retry_delay,
+            clear_unavailable_status_on_success=args.retry_unavailable,
         )
 
         pipeline_run.row_count = result.loaded_rows
         pipeline_run.message = (
             f"Attempted games: {result.attempted_games}; "
             f"completed games: {result.completed_games}; "
+            f"unavailable games: {len(result.unavailable_game_ids)}; "
             f"failed games: {len(result.failed_game_ids)}"
         )
 
@@ -95,6 +103,7 @@ def main() -> None:
     print("Rotation batch ingestion completed")
     print(f"Games attempted: {result.attempted_games}")
     print(f"Games completed: {result.completed_games}")
+    print(f"Games unavailable: {len(result.unavailable_game_ids)}")
     print(f"Rotation stints loaded: {result.loaded_rows}")
     print(f"Pipeline run: {pipeline_run.run_id}")
     print(f"Database: {DATABASE_PATH}")

@@ -514,6 +514,10 @@ body {
     width: 145px;
 }
 
+.scenario-download-control {
+    margin-top: 18px;
+}
+
 .report-download-button {
     width: 100%;
     height: 38px;

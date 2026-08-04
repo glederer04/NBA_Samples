@@ -66,6 +66,7 @@ Outputs include:
 - Minutes-weighted confidence
 - Visual plan comparison
 - Staff-facing interpretation
+- Downloadable two-page rotation-scenario PDF
 
 ![NBA Rotation Lab scenario planner](docs/images/scenario-planner.png)
 
@@ -96,6 +97,7 @@ flowchart LR
     F --> I["PDF reporting"]
     G --> J["Scenario modeling"]
     J --> H
+    J --> I
 ```
 
 ## SQL Data Model
@@ -158,9 +160,10 @@ The scenario is compared with the team baseline over the same planned-minute win
 
 ## Running the Application
 
-From the `nba_rotation_lab` directory:
+From the repository root, enter the Rotation Lab project directory and start Dash:
 
 ```bash
+cd nba_rotation_lab
 python app.py
 ```
 
@@ -192,6 +195,25 @@ Reports are written to:
 output/pdf/
 ```
 
+## Generate a PDF Rotation Scenario Report
+
+Scenario reports can be downloaded directly from the Scenario Planner page. They can also be generated from the command line by supplying a team and one or more lineup allocations:
+
+```bash
+python scripts/generate_scenario_report.py \
+    --team NYK \
+    --allocation 1626157-1628384-1628404-1628969-1628973=24 \
+    --allocation 1626157-1628384-1628969-1628973-1629011=24
+```
+
+Each allocation uses `LINEUP_KEY=MINUTES` format. The selected units must belong to one team, each unit can appear only once, and total planned minutes cannot exceed 48.
+
+Scenario reports are written to:
+
+```text
+output/pdf/
+```
+
 ## Quality Checks
 
 ```bash
@@ -201,7 +223,7 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
-Current project coverage includes more than 60 automated tests across ingestion, SQL marts, lineup reconstruction, recommendations, reporting, dashboard callbacks, and scenario modeling.
+Current project coverage includes 67 automated tests across ingestion, SQL marts, lineup reconstruction, recommendations, reporting, dashboard callbacks, and scenario modeling.
 
 ## Project Structure
 
@@ -239,6 +261,5 @@ The included data represents a development sample and should not be treated as a
 - Player-availability scenario controls
 - Possession-based lineup efficiency
 - Matchup-specific lineup recommendations
-- Scenario PDF exports
 - Automated daily data refresh
 - Production deployment and authentication

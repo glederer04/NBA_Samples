@@ -13,7 +13,7 @@ The work here uses Python to pull, clean, analyze, and present NBA data in a way
 - Code and documentation: [`nba_rotation_lab/`](nba_rotation_lab/)
 - Application framework: Dash and Plotly
 - Data layer: DuckDB and SQL
-- Reporting: Interactive dashboards and downloadable PDF game reports
+- Reporting: Interactive dashboards and downloadable PDF game and scenario reports
 
 NBA Rotation Lab is an end-to-end lineup and rotation decision-support system. It ingests NBA game data, reconstructs five-player lineup intervals, attributes scoring to those units, and presents the results through coach-facing analysis tools.
 
@@ -26,6 +26,7 @@ The application includes:
 - Sample-adjusted lineup recommendations
 - Interactive rotation scenario planning
 - Downloadable PDF game reports
+- Downloadable PDF rotation-scenario reports
 
 The project demonstrates Python application development, relational data modeling, layered SQL transformations, basketball analytics methodology, automated testing, reporting, and communication of findings for coaches and basketball operations staff.
 

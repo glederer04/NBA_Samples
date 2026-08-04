@@ -1,11 +1,17 @@
 """Tests for the Scenario Planner dashboard page."""
 
+from base64 import b64decode
 from datetime import date
 
 import pytest
+from dash import no_update
 
 import app  # noqa: F401  # Import initializes the Dash page registry.
 from pages import scenario_planner
+from rotation_lab.modeling import (
+    LineupAllocation,
+    RotationPlanProjection,
+)
 from rotation_lab.recommendations import LineupRecommendation
 
 
@@ -221,3 +227,89 @@ def test_calculate_scenario_handles_duplicate_lineup(
     assert "each lineup can appear only once" in str(warning)
 
     assert figure.to_plotly_json()["data"] == []
+
+
+def test_download_scenario_report_returns_pdf_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A valid scenario should produce a downloadable PDF."""
+
+    recommendations = [
+        build_recommendation(
+            lineup_key="1-2-3-4-5",
+            rank=1,
+            adjusted_plus_minus_per_48=8.0,
+            confidence_percentage=60.0,
+        ),
+        build_recommendation(
+            lineup_key="6-7-8-9-10",
+            rank=2,
+            adjusted_plus_minus_per_48=6.0,
+            confidence_percentage=50.0,
+        ),
+    ]
+    captured_allocations: list[LineupAllocation] = []
+    captured_projections: list[RotationPlanProjection] = []
+
+    monkeypatch.setattr(
+        scenario_planner,
+        "get_lineup_recommendations",
+        lambda team_abbreviation, *, limit: recommendations,
+    )
+
+    def fake_generate_scenario_report_bytes(
+        *,
+        allocations: list[LineupAllocation],
+        projection: RotationPlanProjection,
+    ) -> bytes:
+        captured_allocations.extend(allocations)
+        captured_projections.append(projection)
+
+        return b"%PDF-test-scenario-report"
+
+    monkeypatch.setattr(
+        scenario_planner,
+        "generate_scenario_report_bytes",
+        fake_generate_scenario_report_bytes,
+    )
+
+    result = scenario_planner.download_scenario_report(
+        n_clicks=1,
+        team_abbreviation="NYK",
+        lineup_a="1-2-3-4-5",
+        lineup_b="6-7-8-9-10",
+        lineup_c=None,
+        minutes_a=24,
+        minutes_b=24,
+        minutes_c=0,
+    )
+
+    assert result["filename"] == "NYK_rotation_scenario_report.pdf"
+    assert result["type"] == "application/pdf"
+    assert result["base64"] is True
+    assert b64decode(result["content"]) == b"%PDF-test-scenario-report"
+
+    assert len(captured_allocations) == 2
+    assert len(captured_projections) == 1
+
+    projection = captured_projections[0]
+
+    assert projection.total_planned_minutes == 48.0
+    assert projection.team_abbreviation == "NYK"
+
+
+def test_download_scenario_report_requires_valid_inputs() -> None:
+    """The download should not run without a completed scenario."""
+
+    result = scenario_planner.download_scenario_report(
+        n_clicks=0,
+        team_abbreviation="NYK",
+        lineup_a=None,
+        lineup_b=None,
+        lineup_c=None,
+        minutes_a=0,
+        minutes_b=0,
+        minutes_c=0,
+    )
+
+    assert result is no_update

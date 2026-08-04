@@ -1,12 +1,17 @@
 """Interactive rotation scenario planning page."""
 
+from base64 import b64encode
+from typing import Any
+
 import plotly.graph_objects as go
 from dash import (
     Input,
     Output,
+    State,
     callback,
     dcc,
     html,
+    no_update,
     register_page,
 )
 
@@ -25,6 +30,7 @@ from rotation_lab.recommendations import (
     LineupRecommendation,
     get_lineup_recommendations,
 )
+from rotation_lab.reporting import generate_scenario_report_bytes
 
 register_page(
     __name__,
@@ -136,6 +142,24 @@ def layout() -> html.Div:
                             ),
                         ],
                         className="scenario-allocation-grid",
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "REPORT",
+                                className="filter-label",
+                            ),
+                            html.Button(
+                                "Download PDF",
+                                id="download-scenario-report-button",
+                                n_clicks=0,
+                                className="report-download-button",
+                            ),
+                            dcc.Download(
+                                id="download-scenario-report",
+                            ),
+                        ],
+                        className=("download-report-control scenario-download-control"),
                     ),
                 ],
                 className="panel scenario-controls-panel",
@@ -327,6 +351,47 @@ def default_plan_values(
     return keys, minutes
 
 
+def build_scenario_allocations(
+    *,
+    team_abbreviation: str,
+    selections: list[
+        tuple[
+            str | None,
+            int | float | None,
+        ]
+    ],
+) -> list[LineupAllocation]:
+    """Build valid lineup allocations from dashboard selections."""
+
+    recommendations = get_lineup_recommendations(
+        team_abbreviation,
+        limit=50,
+    )
+    recommendations_by_key = {
+        recommendation.lineup_key: recommendation for recommendation in recommendations
+    }
+
+    allocations = []
+
+    for lineup_key, planned_minutes in selections:
+        if lineup_key is None or planned_minutes is None or float(planned_minutes) <= 0:
+            continue
+
+        recommendation = recommendations_by_key.get(lineup_key)
+
+        if recommendation is None:
+            continue
+
+        allocations.append(
+            LineupAllocation(
+                recommendation=recommendation,
+                planned_minutes=float(planned_minutes),
+            )
+        )
+
+    return allocations
+
+
 @callback(
     Output("scenario-lineup-a", "options"),
     Output("scenario-lineup-a", "value"),
@@ -409,14 +474,6 @@ def calculate_scenario(
             empty_scenario_figure(message),
         )
 
-    recommendations = get_lineup_recommendations(
-        team_abbreviation,
-        limit=50,
-    )
-    recommendations_by_key = {
-        recommendation.lineup_key: recommendation for recommendation in recommendations
-    }
-
     selections = [
         (
             lineup_a,
@@ -432,23 +489,10 @@ def calculate_scenario(
         ),
     ]
 
-    allocations = []
-
-    for lineup_key, planned_minutes in selections:
-        if lineup_key is None or planned_minutes is None or float(planned_minutes) <= 0:
-            continue
-
-        recommendation = recommendations_by_key.get(lineup_key)
-
-        if recommendation is None:
-            continue
-
-        allocations.append(
-            LineupAllocation(
-                recommendation=recommendation,
-                planned_minutes=float(planned_minutes),
-            )
-        )
+    allocations = build_scenario_allocations(
+        team_abbreviation=team_abbreviation,
+        selections=selections,
+    )
 
     if not allocations:
         message = "Select at least one lineup with planned minutes."
@@ -521,6 +565,74 @@ def calculate_scenario(
     figure = build_scenario_comparison_figure(projection)
 
     return metrics, readout, figure
+
+
+@callback(
+    Output("download-scenario-report", "data"),
+    Input("download-scenario-report-button", "n_clicks"),
+    State("scenario-team-selector", "value"),
+    State("scenario-lineup-a", "value"),
+    State("scenario-lineup-b", "value"),
+    State("scenario-lineup-c", "value"),
+    State("scenario-minutes-a", "value"),
+    State("scenario-minutes-b", "value"),
+    State("scenario-minutes-c", "value"),
+    prevent_initial_call=True,
+)
+def download_scenario_report(
+    n_clicks: int | None,
+    team_abbreviation: str | None,
+    lineup_a: str | None,
+    lineup_b: str | None,
+    lineup_c: str | None,
+    minutes_a: int | float | None,
+    minutes_b: int | float | None,
+    minutes_c: int | float | None,
+) -> Any:
+    """Generate and download the selected rotation scenario."""
+
+    if not n_clicks or team_abbreviation is None:
+        return no_update
+
+    selections = [
+        (
+            lineup_a,
+            minutes_a,
+        ),
+        (
+            lineup_b,
+            minutes_b,
+        ),
+        (
+            lineup_c,
+            minutes_c,
+        ),
+    ]
+
+    allocations = build_scenario_allocations(
+        team_abbreviation=team_abbreviation,
+        selections=selections,
+    )
+
+    try:
+        projection = project_rotation_plan(allocations)
+    except ValueError:
+        return no_update
+
+    pdf_bytes = generate_scenario_report_bytes(
+        allocations=allocations,
+        projection=projection,
+    )
+
+    normalized_team = team_abbreviation.strip().upper()
+    filename = f"{normalized_team}_rotation_scenario_report.pdf"
+
+    return {
+        "content": b64encode(pdf_bytes).decode("ascii"),
+        "filename": filename,
+        "type": "application/pdf",
+        "base64": True,
+    }
 
 
 def build_scenario_comparison_figure(

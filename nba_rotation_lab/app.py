@@ -1,7 +1,12 @@
 """NBA Rotation Lab Dash application."""
 
+import os
+
 import dash_bootstrap_components as dbc
 from dash import Dash, html, page_container
+from flask import Response, jsonify
+
+from rotation_lab.database import connect_database
 
 app = Dash(
     __name__,
@@ -15,6 +20,40 @@ app = Dash(
 )
 
 server = app.server
+
+
+@server.get("/health")
+def health_check() -> tuple[Response, int]:
+    """Confirm that the web process and analytical database are ready."""
+
+    try:
+        connection = connect_database(read_only=True)
+
+        try:
+            result = connection.execute(
+                """
+                SELECT COUNT(*)
+                FROM raw.teams
+                """
+            ).fetchone()
+        finally:
+            connection.close()
+
+        if result is None or result[0] == 0:
+            raise RuntimeError("database contains no teams")
+    except Exception:
+        server.logger.exception("NBA Rotation Lab health check failed")
+
+        return jsonify(
+            status="unhealthy",
+            database="unavailable",
+        ), 503
+
+    return jsonify(
+        status="ok",
+        database="ready",
+    ), 200
+
 
 app.layout = html.Div(
     [
@@ -118,6 +157,6 @@ app.layout = html.Div(
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=8050,
-        debug=True,
+        port=int(os.getenv("PORT", "8050")),
+        debug=os.getenv("DASH_DEBUG", "false").lower() == "true",
     )

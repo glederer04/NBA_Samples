@@ -223,7 +223,19 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
-Current project coverage includes 67 automated tests across ingestion, SQL marts, lineup reconstruction, recommendations, reporting, dashboard callbacks, and scenario modeling.
+Current project coverage includes 72 automated tests across ingestion, SQL marts, lineup reconstruction, recommendations, reporting, dashboard callbacks, scenario modeling, and production readiness.
+
+## Production Deployment
+
+The repository includes a Render Blueprint at `render.yaml`. The deployed service runs under Gunicorn, checks application and database readiness at `/health`, and uses the tracked read-only demonstration snapshot at `data/demo/rotation_lab.duckdb`.
+
+Local development continues to use the ignored working database at `data/db/rotation_lab.duckdb`. Override the database for any environment with:
+
+```bash
+export ROTATION_LAB_DATABASE_PATH=data/demo/rotation_lab.duckdb
+```
+
+The Render service is configured to deploy from `main` after GitHub quality checks pass.
 
 ## Project Structure
 

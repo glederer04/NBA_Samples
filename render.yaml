@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: glederer-nba-rotation-lab
+    runtime: python
+    plan: free
+    region: virginia
+    rootDir: nba_rotation_lab
+    buildCommand: python -m pip install .
+    startCommand: >-
+      gunicorn app:server --bind 0.0.0.0:$PORT
+      --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ROTATION_LAB_DATABASE_PATH
+        value: data/demo/rotation_lab.duckdb
+      - key: DASH_DEBUG
+        value: "false"

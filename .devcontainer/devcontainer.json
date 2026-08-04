@@ -17,17 +17,22 @@
       ]
     }
   },
-  "updateContentCommand": "[ -f packages.txt ] && sudo apt update && sudo apt upgrade -y && sudo xargs apt install -y <packages.txt; [ -f requirements.txt ] && pip3 install --user -r requirements.txt; pip3 install --user streamlit; echo '✅ Packages installed and Requirements met'",
+  "updateContentCommand": "python -m venv .venv-devcontainer && .venv-devcontainer/bin/python -m pip install --upgrade pip && .venv-devcontainer/bin/python -m pip install -r nba_comp_dashboard/requirements.txt -e './nba_rotation_lab[dev]'",
   "postAttachCommand": {
-    "server": "streamlit run nba_comp_dashboard/app.py --server.enableCORS false --server.enableXsrfProtection false"
+    "server": ".venv-devcontainer/bin/streamlit run nba_comp_dashboard/app.py --server.enableCORS false --server.enableXsrfProtection false"
   },
   "portsAttributes": {
     "8501": {
       "label": "Application",
       "onAutoForward": "openPreview"
+    },
+    "8050": {
+      "label": "NBA Rotation Lab",
+      "onAutoForward": "notify"
     }
   },
   "forwardPorts": [
-    8501
+    8501,
+    8050
   ]
 }

@@ -1,0 +1,32 @@
+CREATE TABLE IF NOT EXISTS raw.play_by_play_events (
+    game_id VARCHAR NOT NULL,
+    action_id INTEGER NOT NULL,
+    action_number INTEGER NOT NULL,
+    period INTEGER NOT NULL,
+    clock VARCHAR NOT NULL,
+    clock_seconds_remaining DOUBLE NOT NULL,
+    game_elapsed_deciseconds BIGINT NOT NULL,
+    team_id BIGINT,
+    team_abbreviation VARCHAR,
+    player_id BIGINT,
+    player_name VARCHAR,
+    location VARCHAR,
+    action_type VARCHAR NOT NULL,
+    sub_type VARCHAR,
+    description VARCHAR,
+    shot_result VARCHAR,
+    is_field_goal BOOLEAN NOT NULL,
+    shot_value INTEGER,
+    score_home INTEGER,
+    score_away INTEGER,
+    points_total INTEGER,
+    video_available BOOLEAN NOT NULL,
+    source_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (
+        game_id,
+        action_id
+    ),
+    CHECK (period >= 1),
+    CHECK (clock_seconds_remaining >= 0),
+    CHECK (game_elapsed_deciseconds >= 0)
+);

@@ -6,6 +6,31 @@ This repository is a small NBA analytics portfolio focused on turning basketball
 
 The work here uses Python to pull, clean, analyze, and present NBA data in a way that is readable for scouting, player development, and portfolio review.
 
+## Featured Project
+
+### NBA Rotation Lab
+
+- Code and documentation: [`nba_rotation_lab/`](nba_rotation_lab/)
+- Application framework: Dash and Plotly
+- Data layer: DuckDB and SQL
+- Reporting: Interactive dashboards and downloadable PDF game reports
+
+NBA Rotation Lab is an end-to-end lineup and rotation decision-support system. It ingests NBA game data, reconstructs five-player lineup intervals, attributes scoring to those units, and presents the results through coach-facing analysis tools.
+
+The application includes:
+
+- Executive team and rotation summaries
+- Five-player lineup exploration
+- Full-game rotation timelines
+- Game review dashboards
+- Sample-adjusted lineup recommendations
+- Interactive rotation scenario planning
+- Downloadable PDF game reports
+
+The project demonstrates Python application development, relational data modeling, layered SQL transformations, basketball analytics methodology, automated testing, reporting, and communication of findings for coaches and basketball operations staff.
+
+![NBA Rotation Lab executive dashboard](nba_rotation_lab/docs/images/executive-overview.png)
+
 ## Live Dashboards
 
 ### NBA Player Comp
@@ -46,20 +71,26 @@ This notebook creates a one-page player development profile. It compares a selec
 
 ## Tools
 
-This repo uses Python libraries such as:
+This repository uses:
 
-- `streamlit`
-- `pandas`
-- `plotly`
-- `nba_api`
-- `matplotlib`
-- `Pillow`
-- `scikit-learn`
+- Python
+- SQL
+- DuckDB
+- pandas and NumPy
+- Dash and Streamlit
+- Plotly and Matplotlib
+- nba_api
+- ReportLab
+- scikit-learn
+- pytest and Ruff
+- Docker and VS Code Dev Containers
+- GitHub Actions
 
 ## Repository Structure
 
 ```text
 .
+├── nba_rotation_lab/
 ├── nba_comp_dashboard/
 ├── nba_pregame_gameplan_report.ipynb
 ├── nba_team_1page_style_report.ipynb

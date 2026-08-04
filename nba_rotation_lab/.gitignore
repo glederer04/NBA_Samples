@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments and secrets
+.venv/
+.env
+
+# Runtime data
+data/raw/
+data/interim/
+data/processed/
+data/db/
+
+# Generated reports
+reports/generated/
+output/pdf/
+tmp/pdfs/
+
+# Application runtime
+instance/
+*.log

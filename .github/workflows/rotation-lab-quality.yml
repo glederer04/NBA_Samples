@@ -1,0 +1,49 @@
+name: NBA Rotation Lab Quality
+
+on:
+  push:
+    paths:
+      - "nba_rotation_lab/**"
+      - ".github/workflows/rotation-lab-quality.yml"
+  pull_request:
+    paths:
+      - "nba_rotation_lab/**"
+      - ".github/workflows/rotation-lab-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: nba_rotation_lab
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: nba_rotation_lab/pyproject.toml
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+
+      - name: Initialize test database
+        run: python scripts/init_database.py
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Run Ruff lint
+        run: python -m ruff check .
+
+      - name: Check Ruff formatting
+        run: python -m ruff format --check .

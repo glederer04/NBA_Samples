@@ -244,14 +244,14 @@ team-filtered database for Render:
 
 ```bash
 python scripts/build_demo_database.py \
-    --exclude-teams \
-    LAC GSW MIA CLT MIL CHI BKN IND WAS NOP DAL MEM SAC UTA
+    --featured-teams NYK SAS
 ```
 
-The builder maps Charlotte's `CLT` alias to the `CHA` abbreviation used by NBA
-data. It removes every game involving an excluded team, copies only related box
-scores, rotations, play-by-play events, and players into a fresh compact file,
-validates all retained coverage, and atomically replaces
+The builder retains every game involving a featured team, including the
+opponent data required for complete game and lineup analysis. Only featured
+teams appear in dashboard team selectors. It copies related box scores,
+rotations, play-by-play events, and players into a fresh compact file, validates
+the complete schedule and coverage for each featured team, and atomically replaces
 `data/demo/rotation_lab.duckdb`. The complete database in `data/db/` is not
 changed.
 

@@ -26,10 +26,10 @@ def parse_args() -> argparse.Namespace:
         help="Deployment DuckDB destination path.",
     )
     parser.add_argument(
-        "--exclude-teams",
+        "--featured-teams",
         nargs="+",
         required=True,
-        help="Team abbreviations whose games should be excluded.",
+        help="Selectable teams whose complete schedules should be retained.",
     )
 
     return parser.parse_args()
@@ -48,11 +48,11 @@ def main() -> None:
     summary = build_demo_database(
         source_path=Path(args.source).expanduser(),
         destination_path=Path(args.destination).expanduser(),
-        excluded_team_abbreviations=args.exclude_teams,
+        featured_team_abbreviations=args.featured_teams,
     )
 
     print("Deployment database built successfully")
-    print(f"Excluded teams: {', '.join(summary.excluded_teams)}")
+    print(f"Featured teams: {', '.join(summary.featured_teams)}")
     print(f"Retained teams: {summary.retained_teams}")
     print(f"Retained games: {summary.retained_games}")
     print(f"Retained players: {summary.retained_players}")

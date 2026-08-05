@@ -17,9 +17,11 @@ def get_dashboard_teams() -> list[dict[str, str]]:
     try:
         rows = connection.execute(
             """
-            SELECT DISTINCT team_abbreviation
-            FROM marts.team_game_review
-            ORDER BY team_abbreviation
+            SELECT DISTINCT reviews.team_abbreviation
+            FROM marts.team_game_review AS reviews
+            INNER JOIN raw.teams AS featured_teams
+                ON reviews.team_abbreviation = featured_teams.abbreviation
+            ORDER BY reviews.team_abbreviation
             """
         ).fetchall()
     finally:

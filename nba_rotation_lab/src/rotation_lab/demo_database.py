@@ -17,7 +17,7 @@ TEAM_ABBREVIATION_ALIASES = {
 class DemoDatabaseSummary:
     """Counts and size information for one deployment snapshot."""
 
-    excluded_teams: tuple[str, ...]
+    featured_teams: tuple[str, ...]
     retained_teams: int
     retained_games: int
     retained_players: int
@@ -38,7 +38,7 @@ def normalize_team_abbreviations(values: list[str]) -> tuple[str, ...]:
     }
 
     if not normalized:
-        raise ValueError("At least one excluded team abbreviation is required")
+        raise ValueError("At least one featured team abbreviation is required")
 
     return tuple(sorted(normalized))
 
@@ -48,17 +48,17 @@ def _attach_source(connection, source_path: Path) -> None:
     connection.execute(f"ATTACH '{escaped_path}' AS source_database (READ_ONLY)")
 
 
-def _copy_pruned_raw_data(
+def _copy_featured_raw_data(
     source_path: Path,
     destination_path: Path,
-    excluded_teams: tuple[str, ...],
+    featured_teams: tuple[str, ...],
 ) -> None:
     initialize_database(
         database_path=destination_path,
         sql_directory=SQL_DIR,
     )
     connection = connect_database(destination_path)
-    placeholders = ", ".join("?" for _ in excluded_teams)
+    placeholders = ", ".join("?" for _ in featured_teams)
 
     try:
         connection.execute("BEGIN TRANSACTION")
@@ -68,9 +68,9 @@ def _copy_pruned_raw_data(
             INSERT INTO raw.teams
             SELECT *
             FROM source_database.raw.teams
-            WHERE abbreviation NOT IN ({placeholders})
+            WHERE abbreviation IN ({placeholders})
             """,
-            list(excluded_teams),
+            list(featured_teams),
         )
         connection.execute(
             f"""
@@ -78,10 +78,10 @@ def _copy_pruned_raw_data(
             SELECT *
             FROM source_database.raw.games
             WHERE
-                home_team_abbreviation NOT IN ({placeholders})
-                AND away_team_abbreviation NOT IN ({placeholders})
+                home_team_abbreviation IN ({placeholders})
+                OR away_team_abbreviation IN ({placeholders})
             """,
-            [*excluded_teams, *excluded_teams],
+            [*featured_teams, *featured_teams],
         )
         connection.execute(
             """
@@ -133,26 +133,26 @@ def _copy_pruned_raw_data(
 
 
 def _validate_demo_database(
+    source_path: Path,
     database_path: Path,
-    excluded_teams: tuple[str, ...],
+    featured_teams: tuple[str, ...],
 ) -> dict[str, int]:
     connection = connect_database(database_path, read_only=True)
-    placeholders = ", ".join("?" for _ in excluded_teams)
+    placeholders = ", ".join("?" for _ in featured_teams)
 
     try:
-        excluded_team_rows = connection.execute(
-            f"SELECT COUNT(*) FROM raw.teams WHERE abbreviation IN ({placeholders})",
-            list(excluded_teams),
-        ).fetchone()[0]
-        excluded_game_rows = connection.execute(
+        retained_team_rows = connection.execute(
+            "SELECT abbreviation FROM raw.teams ORDER BY abbreviation"
+        ).fetchall()
+        unrelated_game_rows = connection.execute(
             f"""
             SELECT COUNT(*)
             FROM raw.games
             WHERE
-                home_team_abbreviation IN ({placeholders})
-                OR away_team_abbreviation IN ({placeholders})
+                home_team_abbreviation NOT IN ({placeholders})
+                AND away_team_abbreviation NOT IN ({placeholders})
             """,
-            [*excluded_teams, *excluded_teams],
+            [*featured_teams, *featured_teams],
         ).fetchone()[0]
         orphan_counts = connection.execute(
             """
@@ -206,13 +206,46 @@ def _validate_demo_database(
     finally:
         connection.close()
 
-    if excluded_team_rows or excluded_game_rows or orphan_counts:
+    retained_teams = tuple(str(row[0]) for row in retained_team_rows)
+
+    if retained_teams != featured_teams or unrelated_game_rows or orphan_counts:
         raise ValueError(
             "Deployment database failed referential validation: "
-            f"excluded_team_rows={excluded_team_rows}, "
-            f"excluded_game_rows={excluded_game_rows}, "
+            f"retained_teams={retained_teams}, "
+            f"unrelated_game_rows={unrelated_game_rows}, "
             f"orphan_rows={orphan_counts}"
         )
+
+    source_connection = connect_database(source_path, read_only=True)
+    destination_connection = connect_database(database_path, read_only=True)
+
+    try:
+        for team_abbreviation in featured_teams:
+            parameters = [team_abbreviation, team_abbreviation]
+            schedule_query = """
+                SELECT COUNT(*)
+                FROM raw.games
+                WHERE
+                    home_team_abbreviation = ?
+                    OR away_team_abbreviation = ?
+            """
+            source_games = source_connection.execute(
+                schedule_query,
+                parameters,
+            ).fetchone()[0]
+            destination_games = destination_connection.execute(
+                schedule_query,
+                parameters,
+            ).fetchone()[0]
+
+            if destination_games != source_games:
+                raise ValueError(
+                    f"Deployment database is missing {team_abbreviation} games: "
+                    f"source={source_games}, destination={destination_games}"
+                )
+    finally:
+        source_connection.close()
+        destination_connection.close()
 
     count_names = [
         "retained_teams",
@@ -239,7 +272,7 @@ def _validate_demo_database(
 def build_demo_database(
     source_path: Path,
     destination_path: Path,
-    excluded_team_abbreviations: list[str],
+    featured_team_abbreviations: list[str],
 ) -> DemoDatabaseSummary:
     """Build and atomically install a compact deployment snapshot."""
 
@@ -252,7 +285,7 @@ def build_demo_database(
     if not source_path.is_file():
         raise FileNotFoundError(f"Source database does not exist: {source_path}")
 
-    excluded_teams = normalize_team_abbreviations(excluded_team_abbreviations)
+    featured_teams = normalize_team_abbreviations(featured_team_abbreviations)
     destination_path.parent.mkdir(parents=True, exist_ok=True)
     file_descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{destination_path.stem}-",
@@ -264,21 +297,22 @@ def build_demo_database(
     temporary_path.unlink()
 
     try:
-        _copy_pruned_raw_data(
+        _copy_featured_raw_data(
             source_path=source_path,
             destination_path=temporary_path,
-            excluded_teams=excluded_teams,
+            featured_teams=featured_teams,
         )
         counts = _validate_demo_database(
+            source_path=source_path,
             database_path=temporary_path,
-            excluded_teams=excluded_teams,
+            featured_teams=featured_teams,
         )
         temporary_path.replace(destination_path)
     finally:
         temporary_path.unlink(missing_ok=True)
 
     return DemoDatabaseSummary(
-        excluded_teams=excluded_teams,
+        featured_teams=featured_teams,
         retained_teams=counts["retained_teams"],
         retained_games=counts["retained_games"],
         retained_players=counts["retained_players"],

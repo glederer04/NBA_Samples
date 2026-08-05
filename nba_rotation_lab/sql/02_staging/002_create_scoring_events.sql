@@ -104,5 +104,9 @@ FROM score_changes AS changes
 INNER JOIN raw.games AS games
     ON changes.game_id = games.game_id
 WHERE
-    changes.home_points != 0
-    OR changes.away_points != 0;
+    (
+        changes.home_points != 0
+        OR changes.away_points != 0
+    )
+    AND ABS(changes.home_points) <= 10
+    AND ABS(changes.away_points) <= 10;

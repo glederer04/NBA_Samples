@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retry-unavailable",
         action="store_true",
-        help="Retry games previously marked as unavailable by NBA Stats.",
+        help="Retained for compatibility; unavailable games are now retried automatically.",
     )
 
     return parser.parse_args()
@@ -62,7 +62,7 @@ def main() -> None:
         database_path=DATABASE_PATH,
         team_abbreviation=args.team,
         limit=args.limit,
-        include_unavailable=args.retry_unavailable,
+        include_unavailable=True,
     )
 
     if not pending_game_ids:
@@ -84,7 +84,7 @@ def main() -> None:
             max_attempts=args.max_attempts,
             request_delay_seconds=args.request_delay,
             retry_delay_seconds=args.retry_delay,
-            clear_unavailable_status_on_success=args.retry_unavailable,
+            clear_unavailable_status_on_success=True,
         )
 
         pipeline_run.row_count = result.loaded_rows

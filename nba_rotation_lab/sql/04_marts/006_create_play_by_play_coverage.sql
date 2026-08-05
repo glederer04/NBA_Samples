@@ -20,6 +20,7 @@ ranked_scores AS (
         ROW_NUMBER() OVER (
             PARTITION BY game_id
             ORDER BY
+                points_total DESC,
                 game_elapsed_deciseconds DESC,
                 action_number DESC,
                 action_id DESC

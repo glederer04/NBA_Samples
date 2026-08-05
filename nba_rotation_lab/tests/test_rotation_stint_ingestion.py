@@ -13,7 +13,9 @@ from rotation_lab.ingest.rotation_stints import (
     calculate_period,
     fetch_rotation_stints,
     load_rotation_stints,
+    match_incoming_player,
     normalize_rotation_stints,
+    reconstruct_rotation_stints,
 )
 
 
@@ -164,6 +166,123 @@ def test_normalize_rotation_stints_discards_zero_duration_records() -> None:
     assert 1642276 not in stints["player_id"].tolist()
 
 
+@pytest.mark.parametrize(
+    ("incoming_label", "expected_player_id"),
+    [
+        ("Se. Curry", 1),
+        ("St. Curry", 2),
+        ("Hansen", 3),
+    ],
+)
+def test_match_incoming_player_supports_nba_name_variants(
+    incoming_label: str,
+    expected_player_id: int,
+) -> None:
+    """NBA substitution abbreviations and reordered names should resolve safely."""
+
+    team_players = pd.DataFrame(
+        [
+            {"player_id": 1, "player_name": "Seth Curry", "did_not_play": False},
+            {"player_id": 2, "player_name": "Stephen Curry", "did_not_play": False},
+            {"player_id": 3, "player_name": "Hansen Yang", "did_not_play": False},
+        ]
+    )
+
+    player = match_incoming_player(
+        team_players=team_players,
+        incoming_label=incoming_label,
+        active_player_ids=set(),
+    )
+
+    assert int(player["player_id"]) == expected_player_id
+
+
+def test_reconstruct_rotation_stints_from_substitutions() -> None:
+    """The fallback should preserve five-player coverage for each team."""
+
+    box_score_rows = []
+
+    for team_id, location in [(10, "away"), (20, "home")]:
+        for player_number in range(1, 7):
+            box_score_rows.append(
+                {
+                    "team_id": team_id,
+                    "player_id": team_id * 100 + player_number,
+                    "player_name": (
+                        f"Team {team_id} Bench"
+                        if player_number == 6
+                        else f"Team {team_id} Player {player_number}"
+                    ),
+                    "starter": player_number <= 5,
+                    "did_not_play": False,
+                    "minutes": (
+                        46.0 if player_number == 1 else 2.0 if player_number == 6 else 48.0
+                    ),
+                    "team_location": location,
+                    "team_city": f"City {team_id}",
+                    "team_name": f"Team {team_id}",
+                }
+            )
+
+    play_by_play = pd.DataFrame(
+        [
+            {
+                "action_number": 1,
+                "action_type": "substitution",
+                "description": "SUB: Bench FOR Player 1",
+                "game_elapsed_deciseconds": 6000,
+                "period": 1,
+                "player_id": 1001,
+                "team_id": 10,
+            },
+            {
+                "action_number": 2,
+                "action_type": "substitution",
+                "description": "SUB: Bench FOR Player 1",
+                "game_elapsed_deciseconds": 6000,
+                "period": 1,
+                "player_id": 2001,
+                "team_id": 20,
+            },
+            {
+                "action_number": 3,
+                "action_type": "period",
+                "description": "Period End",
+                "game_elapsed_deciseconds": 28800,
+                "period": 4,
+                "player_id": None,
+                "team_id": None,
+            },
+        ]
+    )
+
+    stints = reconstruct_rotation_stints(
+        game_id="0022500001",
+        play_by_play=play_by_play,
+        box_scores=pd.DataFrame(box_score_rows),
+    )
+
+    team_seconds = stints.groupby("team_id")["duration_seconds"].sum().to_dict()
+
+    assert team_seconds == {10: 14400.0, 20: 14400.0}
+    assert stints.loc[stints["player_id"] == 1001, "duration_seconds"].sum() == 2760.0
+    assert stints.loc[stints["player_id"] == 1006, "duration_seconds"].sum() == 120.0
+    assert (
+        stints.loc[
+            (stints["player_id"] == 1001) & (stints["period"] == 1),
+            "duration_seconds",
+        ].sum()
+        == 600.0
+    )
+    assert (
+        stints.loc[
+            (stints["player_id"] == 1006) & (stints["period"] == 1),
+            "duration_seconds",
+        ].sum()
+        == 120.0
+    )
+
+
 def test_load_rotation_stints(tmp_path: Path) -> None:
     """Normalized rotation stints should load into DuckDB."""
 
@@ -210,3 +329,29 @@ def test_load_rotation_stints(tmp_path: Path) -> None:
         ("Alex Caruso", 2, 320.0),
         ("Kevin Durant", 1, 720.0),
     ]
+
+
+def test_load_rotation_stints_replaces_all_existing_rows_for_game(
+    tmp_path: Path,
+) -> None:
+    """A corrected game load should remove stale stints from its prior version."""
+
+    database_path = tmp_path / "test_rotation_lab.duckdb"
+    initialize_database(database_path=database_path, sql_directory=SQL_DIR)
+    original_stints = normalize_rotation_stints(
+        away_team=sample_away_rotation(),
+        home_team=sample_home_rotation(),
+    )
+    corrected_stints = original_stints.loc[original_stints["player_id"].eq(201142)].copy()
+
+    load_rotation_stints(database_path=database_path, frame=original_stints)
+    load_rotation_stints(database_path=database_path, frame=corrected_stints)
+
+    connection = duckdb.connect(database=str(database_path), read_only=True)
+
+    try:
+        rows = connection.execute("SELECT player_name FROM raw.rotation_stints").fetchall()
+    finally:
+        connection.close()
+
+    assert rows == [("Kevin Durant",)]

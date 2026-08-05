@@ -48,10 +48,12 @@ def get_pending_play_by_play_game_ids(
         )
         """,
         """
-        NOT EXISTS (
+        EXISTS (
             SELECT 1
-            FROM raw.play_by_play_events AS events
-            WHERE events.game_id = games.game_id
+            FROM marts.play_by_play_coverage AS coverage
+            WHERE
+                coverage.game_id = games.game_id
+                AND coverage.coverage_status != 'complete'
         )
         """,
     ]

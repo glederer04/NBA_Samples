@@ -249,9 +249,19 @@ def load_play_by_play(
     connection = connect_database(database_path)
 
     try:
+        connection.execute("BEGIN TRANSACTION")
         connection.register(
             "play_by_play_frame",
             play_by_play,
+        )
+        connection.execute(
+            """
+            DELETE FROM raw.play_by_play_events
+            WHERE game_id IN (
+                SELECT DISTINCT CAST(game_id AS VARCHAR)
+                FROM play_by_play_frame
+            )
+            """
         )
 
         connection.execute(
@@ -308,6 +318,10 @@ def load_play_by_play(
             FROM play_by_play_frame
             """
         )
+        connection.execute("COMMIT")
+    except Exception:
+        connection.execute("ROLLBACK")
+        raise
     finally:
         connection.close()
 

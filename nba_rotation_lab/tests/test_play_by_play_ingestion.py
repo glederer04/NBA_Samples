@@ -189,3 +189,26 @@ def test_load_play_by_play(tmp_path: Path) -> None:
         (5, 1, 340, "OKC", 2, 0),
         (150, 2, 7200, "", 24, 22),
     ]
+
+
+def test_load_play_by_play_replaces_all_existing_events_for_game(
+    tmp_path: Path,
+) -> None:
+    """A corrected game load should remove stale events from its prior version."""
+
+    database_path = tmp_path / "test_rotation_lab.duckdb"
+    initialize_database(database_path=database_path, sql_directory=SQL_DIR)
+    original_events = normalize_play_by_play(sample_play_by_play())
+    corrected_events = original_events.iloc[[0]].copy()
+
+    load_play_by_play(database_path=database_path, frame=original_events)
+    load_play_by_play(database_path=database_path, frame=corrected_events)
+
+    connection = duckdb.connect(database=str(database_path), read_only=True)
+
+    try:
+        action_ids = connection.execute("SELECT action_id FROM raw.play_by_play_events").fetchall()
+    finally:
+        connection.close()
+
+    assert action_ids == [(1,)]

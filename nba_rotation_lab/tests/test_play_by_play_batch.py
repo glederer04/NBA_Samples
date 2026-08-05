@@ -142,7 +142,7 @@ def seed_pending_play_by_play_data(
 def test_get_pending_play_by_play_game_ids(
     tmp_path: Path,
 ) -> None:
-    """Only rotation-covered games without events should return."""
+    """Rotation-covered games without complete events should return."""
 
     database_path = tmp_path / "test_rotation_lab.duckdb"
     initialize_database(
@@ -159,8 +159,8 @@ def test_get_pending_play_by_play_game_ids(
         team_abbreviation="nyk",
     )
 
-    assert all_pending_games == ["002"]
-    assert knicks_pending_games == ["002"]
+    assert all_pending_games == ["001", "002"]
+    assert knicks_pending_games == ["001", "002"]
 
 
 def test_ingest_play_by_play_game_ids_retries(
@@ -294,6 +294,21 @@ def test_play_by_play_coverage_summary(
                     110,
                     105,
                     215,
+                    TRUE
+                ),
+                (
+                    '001',
+                    501,
+                    501,
+                    4,
+                    'PT00M00.00S',
+                    0,
+                    28800,
+                    'period',
+                    FALSE,
+                    50,
+                    50,
+                    100,
                     TRUE
                 )
             """

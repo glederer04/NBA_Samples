@@ -237,6 +237,24 @@ Local development continues to use the ignored working database at `data/db/rota
 export ROTATION_LAB_DATABASE_PATH=data/demo/rotation_lab.duckdb
 ```
 
+### Compact Deployment Snapshot
+
+Keep the complete season in the ignored local database and build a smaller,
+team-filtered database for Render:
+
+```bash
+python scripts/build_demo_database.py \
+    --exclude-teams \
+    LAC GSW MIA CLT MIL CHI BKN IND WAS NOP DAL MEM SAC UTA
+```
+
+The builder maps Charlotte's `CLT` alias to the `CHA` abbreviation used by NBA
+data. It removes every game involving an excluded team, copies only related box
+scores, rotations, play-by-play events, and players into a fresh compact file,
+validates all retained coverage, and atomically replaces
+`data/demo/rotation_lab.duckdb`. The complete database in `data/db/` is not
+changed.
+
 The Render service is configured to deploy from `main` after GitHub quality checks pass.
 
 ## Project Structure

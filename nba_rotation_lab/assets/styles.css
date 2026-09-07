@@ -11,7 +11,7 @@
     --orange: #f27a2b;
     --green: #16855b;
     --red: #c5424d;
-    --shadow: 0 12px 30px rgba(17, 27, 44, 0.08);
+    --shadow: 0 3px 12px rgba(17, 27, 44, 0.04);
 }
 
 * {
@@ -561,8 +561,8 @@ body {
 }
 
 .period-margin-graph {
-    height: 260px;
-    min-height: 260px;
+    height: 300px;
+    min-height: 300px;
     overflow: hidden;
 }
 
@@ -1117,4 +1117,80 @@ body {
     width: 100%;
     min-height: 320px;
     overflow: hidden;
+}
+
+/* Responsive dashboard refinements. Keep wide data inside its own scroll region. */
+.page-title { font-size: clamp(30px, 3vw, 42px); line-height: 1.15; }
+.page-header > div { min-width: 0; }
+.team-filter, .recommendation-team-filter, .scenario-team-filter { flex-shrink: 0; }
+.metric-card { min-width: 0; }
+.metric-label { min-height: 32px; }
+.metric-value { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.panel { min-width: 0; }
+#recent-games { overflow-x: auto; }
+#recent-games .data-table { white-space: nowrap; }
+.data-table tbody tr:hover { background: #f6f8fb; }
+#recommendation-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lineup-filter-row { grid-template-columns: 150px minmax(0, 1fr) 170px; }
+.player-headshot-name { white-space: normal; overflow-wrap: anywhere; min-height: 28px; }
+.sidebar { overflow-y: auto; }
+.sidebar-footer { color: #9caac0; }
+.sidebar-label { color: #a6b5ca; }
+.report-download-button:disabled { opacity: .6; cursor: wait; transform: none; box-shadow: none; }
+.report-status { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+:focus-visible { outline: 3px solid #6295e8; outline-offset: 3px; }
+@media (max-width: 1450px) {
+    .review-page-header, .rotation-page-header { align-items: stretch; flex-direction: column; }
+    .review-filter-row { min-width: 0; width: 100%; }
+    .review-filter.game-filter { flex: 1; }
+    .rotation-filter-row { width: 100%; grid-template-columns: 180px minmax(0, 1fr); }
+    .overview-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 1100px) {
+    .page-content { padding: 28px 24px; }
+    .lineup-filter-row { grid-template-columns: 130px minmax(0, 1fr); }
+    .lineup-filter.minutes { grid-column: 1 / -1; max-width: 220px; }
+    #recommendation-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+    .sidebar { padding: 16px; }
+    .brand { padding-bottom: 14px; }
+    .brand-mark { width: 38px; height: 38px; }
+    .sidebar-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
+    .sidebar-nav .nav-link { padding: 10px; font-size: 12px; }
+    .sidebar-status { margin-top: 14px; padding: 12px 0 0; }
+    .sidebar-footer { margin-top: 10px; }
+    .page-content { padding: 24px 16px; }
+    .panel { padding: 18px; }
+    .lineup-filter-row, .rotation-filter-row { grid-template-columns: 1fr; }
+    .lineup-filter.minutes { max-width: none; }
+    .metric-grid, .lineup-metric-grid, .scenario-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .metric-card { padding: 16px; }
+    .metric-value { font-size: 26px; }
+    .lineup-card-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .lineup-stat-value { font-size: 16px; white-space: nowrap; }
+    .lineup-card-stats { align-items: start; }
+    .lineup-stat-label { min-height: 32px; }
+    .player-headshot-name { font-size: 9px; }
+    .review-filter.game-filter { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+}
+.team-option { display: inline-flex; align-items: center; gap: 9px; }
+.team-logo { width: 27px; height: 27px; object-fit: contain; flex: 0 0 27px; }
+.review-filter-row { flex-wrap: wrap; }
+#game-report-status { flex-basis: 100%; margin-top: 0; }
+.report-status:empty { display: none; }
+.scenario-download-control { width: 100%; }
+.scenario-download-control .report-download-button { width: 180px; }
+
+@media (min-width: 801px) and (max-width: 1100px) {
+    .lineup-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.selected-lineup-summary { margin-top: 10px; font-size: 12px; line-height: 1.6; color: var(--text-muted); }
+@media (max-width: 800px) {
+    .scenario-page-header, .recommendation-page-header { align-items: stretch; }
+    .scenario-team-filter, .recommendation-team-filter { width: 100%; }
 }

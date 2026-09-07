@@ -3,9 +3,11 @@
 from typing import Any
 
 from rotation_lab.config import DATABASE_PATH
+from rotation_lab.dashboard.cache import database_cached
 from rotation_lab.database import connect_database
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_dashboard_teams() -> list[dict[str, str]]:
     """Return teams with game-review data."""
 
@@ -36,6 +38,7 @@ def get_dashboard_teams() -> list[dict[str, str]]:
     ]
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_team_overview(
     team_abbreviation: str,
 ) -> dict[str, Any]:
@@ -147,6 +150,7 @@ def get_team_overview(
     }
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_team_games(
     team_abbreviation: str,
 ) -> list[dict[str, str]]:
@@ -208,6 +212,7 @@ def get_team_games(
     return options
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_game_review(
     team_abbreviation: str,
     game_id: str,
@@ -360,6 +365,7 @@ def get_game_review(
     }
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_team_players(
     team_abbreviation: str,
 ) -> list[dict[str, str]]:
@@ -416,6 +422,7 @@ def get_team_players(
     ]
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_lineup_explorer(
     team_abbreviation: str,
     minimum_minutes: float = 0,
@@ -487,6 +494,7 @@ def get_lineup_explorer(
     return rows
 
 
+@database_cached(lambda: DATABASE_PATH)
 def get_rotation_timeline(
     team_abbreviation: str,
     game_id: str,
@@ -604,3 +612,11 @@ def get_rotation_timeline(
         "stints": stints,
         "substitutions": substitutions,
     }
+
+
+@database_cached(lambda: DATABASE_PATH)
+def get_planner_recommendations(team_abbreviation: str, *, limit: int = 50) -> list:
+    """Reuse the unchanged recommendation query across minute edits and exports."""
+    from rotation_lab.recommendations import get_lineup_recommendations
+
+    return get_lineup_recommendations(team_abbreviation, limit=limit, database_path=DATABASE_PATH)

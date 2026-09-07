@@ -198,3 +198,11 @@ The included data represents a development sample and should not be treated as a
 - Matchup-specific lineup recommendations
 - Automated daily data refresh
 - Production deployment and authentication
+
+## Local development and quality review
+
+From this directory, create a Python 3.11–3.13 environment, install with `python -m pip install -e '.[dev]'`, then run `python app.py` and open `http://localhost:8050`.
+
+For a fresh checkout, use the included sample database with `ROTATION_LAB_DATABASE_PATH=data/demo/rotation_lab.duckdb python app.py`. Run `python -m pytest` and `ruff check .` for validation.
+
+The [September 2026 quality review](docs/quality-review-2026-09.md) documents responsive layout fixes, bundled team logos, query caching, rotation-chart optimization, and improved PDF generation. Game PDFs include every qualifying stretch returned by the existing query and can span more than two pages; scenario reports retain their two-page design.

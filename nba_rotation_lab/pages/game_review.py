@@ -1,5 +1,6 @@
 """Interactive Game Review dashboard page."""
 
+import logging
 from base64 import b64encode
 from typing import Any
 
@@ -22,8 +23,8 @@ from rotation_lab.dashboard.components import (
     lineup_card,
     metric_card,
 )
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.data import (
-    get_dashboard_teams,
     get_game_review,
     get_team_games,
 )
@@ -90,6 +91,7 @@ def layout(
                                 [
                                     html.Label(
                                         "TEAM",
+                                        htmlFor="review-team-selector",
                                         className="filter-label",
                                     ),
                                     dcc.Dropdown(
@@ -106,6 +108,7 @@ def layout(
                                 [
                                     html.Label(
                                         "GAME",
+                                        htmlFor="review-game-selector",
                                         className="filter-label",
                                     ),
                                     dcc.Dropdown(
@@ -136,6 +139,9 @@ def layout(
                             dcc.Download(
                                 id="download-game-report",
                             ),
+                            html.Div(
+                                id="game-report-status", className="report-status", role="status"
+                            ),
                         ],
                         className="review-filter-row",
                     ),
@@ -161,6 +167,7 @@ def layout(
                             dcc.Graph(
                                 id="period-margin-chart",
                                 className="period-margin-graph",
+                                style={"height": "300px"},
                                 config={
                                     "displayModeBar": False,
                                     "responsive": True,
@@ -252,11 +259,28 @@ def update_game_options(
 
 @callback(
     Output("download-game-report", "data"),
+    Output("game-report-status", "children"),
     Input("download-game-report-button", "n_clicks"),
     State("review-team-selector", "value"),
     State("review-game-selector", "value"),
+    running=[
+        (Output("download-game-report-button", "disabled"), True, False),
+        (Output("download-game-report-button", "children"), "Preparing PDF…", "Download PDF"),
+    ],
     prevent_initial_call=True,
 )
+def handle_game_report_download(*args: Any) -> tuple:
+    """Keep export failures visible and allow retry without losing the selection."""
+    try:
+        payload = download_game_report(*args)
+    except Exception:
+        logging.getLogger(__name__).exception("PDF export failed")
+        return no_update, "Could not create the PDF. Please retry."
+    if payload is no_update:
+        return no_update, "Select a valid game before downloading."
+    return payload, "PDF ready. Check your browser downloads."
+
+
 def download_game_report(
     n_clicks: int | None,
     team_abbreviation: str | None,
@@ -418,7 +442,7 @@ def build_period_figure(
             "t": 25,
             "b": 55,
         },
-        height=260,
+        height=300,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
@@ -593,7 +617,16 @@ def stretch_card(
                     ),
                     html.Strong(
                         format_signed(int(plus_minus)),
-                        className=f"stretch-margin {tone}",
+                        className=(
+                            "stretch-margin "
+                            + (
+                                "positive"
+                                if plus_minus > 0
+                                else "negative"
+                                if plus_minus < 0
+                                else "neutral"
+                            )
+                        ),
                     ),
                 ],
                 className="stretch-card-header",

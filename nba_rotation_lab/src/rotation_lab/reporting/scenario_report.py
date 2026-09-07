@@ -29,6 +29,8 @@ from rotation_lab.modeling import (
     RotationPlanProjection,
     describe_rotation_plan,
 )
+from rotation_lab.reporting.branding import draw_report_frame
+from rotation_lab.reporting.charts import margin_chart
 
 NAVY = colors.HexColor("#111B2C")
 BLUE = colors.HexColor("#2366D1")
@@ -116,6 +118,7 @@ def _write_scenario_report(
     page_callback = partial(
         _draw_header_footer,
         report_label=f"{projection.team_abbreviation} Rotation Scenario",
+        team_abbreviation=projection.team_abbreviation,
     )
 
     document.build(
@@ -264,6 +267,16 @@ def _build_story(
             styles=styles,
         ),
         Spacer(1, 12),
+        Paragraph("Plan Comparison (+/- per 48)", styles["section"]),
+        margin_chart(
+            ["Team baseline", "Scenario estimate", "Difference"],
+            [
+                projection.team_plus_minus_per_48,
+                projection.weighted_adjusted_plus_minus_per_48,
+                projection.projected_difference_per_48,
+            ],
+        ),
+        Spacer(1, 10),
         Paragraph(
             "Decision Context",
             styles["section"],
@@ -732,46 +745,9 @@ def _draw_header_footer(
     document: SimpleDocTemplate,
     *,
     report_label: str,
+    team_abbreviation: str = "",
 ) -> None:
-    """Draw consistent report framing and page numbers."""
-
-    canvas.saveState()
-
-    page_width, page_height = letter
-
-    canvas.setFillColor(NAVY)
-    canvas.rect(
-        0,
-        page_height - 0.18 * inch,
-        page_width,
-        0.18 * inch,
-        fill=1,
-        stroke=0,
+    """Draw the common branded report frame."""
+    draw_report_frame(
+        canvas, document, report_label=report_label, team_abbreviation=team_abbreviation
     )
-
-    canvas.setStrokeColor(MID_GRAY)
-    canvas.setLineWidth(0.6)
-    canvas.line(
-        0.65 * inch,
-        0.48 * inch,
-        page_width - 0.65 * inch,
-        0.48 * inch,
-    )
-
-    canvas.setFont(
-        "Helvetica",
-        7,
-    )
-    canvas.setFillColor(TEXT_GRAY)
-    canvas.drawString(
-        0.65 * inch,
-        0.3 * inch,
-        report_label,
-    )
-    canvas.drawRightString(
-        page_width - 0.65 * inch,
-        0.3 * inch,
-        f"NBA Rotation Lab | Page {document.page}",
-    )
-
-    canvas.restoreState()

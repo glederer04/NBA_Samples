@@ -14,7 +14,7 @@ from rotation_lab.dashboard.components import (
     metric_card,
     player_headshot,
 )
-from rotation_lab.dashboard.data import get_dashboard_teams
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.recommendations import (
     LineupRecommendation,
     describe_lineup_recommendation,
@@ -63,6 +63,7 @@ def layout() -> html.Div:
                         [
                             html.Label(
                                 "TEAM",
+                                htmlFor="recommendation-team-selector",
                                 className="filter-label",
                             ),
                             dcc.Dropdown(

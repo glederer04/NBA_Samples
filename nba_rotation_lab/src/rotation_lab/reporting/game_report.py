@@ -25,6 +25,9 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from rotation_lab.reporting.branding import draw_report_frame
+from rotation_lab.reporting.charts import margin_chart
+
 NAVY = colors.HexColor("#111B2C")
 BLUE = colors.HexColor("#2366D1")
 ORANGE = colors.HexColor("#F27A2B")
@@ -101,6 +104,7 @@ def _write_game_report(
     page_callback = partial(
         _draw_header_footer,
         report_label=report_label,
+        team_abbreviation=data["team_abbreviation"],
     )
 
     document.build(
@@ -232,6 +236,11 @@ def _build_story(
             "Period Performance",
             styles["section"],
         ),
+        margin_chart(
+            [_period_label(int(row[0])) for row in data["periods"]],
+            [float(row[3]) for row in data["periods"]],
+        ),
+        Spacer(1, 10),
         _period_table(data["periods"], styles),
         PageBreak(),
         Spacer(1, 22),
@@ -528,7 +537,7 @@ def _stretch_table(
         )
     ]
 
-    for stretch in stretches[:7]:
+    for stretch in stretches:
         period = int(stretch[0])
         lineup_names = escape(str(stretch[4])).replace(
             " | ",
@@ -587,7 +596,7 @@ def _styled_table(
 
     table = Table(
         rows,
-        colWidths=col_widths,
+        colWidths=[column / sum(col_widths) * 7 * inch for column in col_widths],
         repeatRows=1,
         hAlign="LEFT",
     )
@@ -616,74 +625,12 @@ def _draw_header_footer(
     document: SimpleDocTemplate,
     *,
     report_label: str,
+    team_abbreviation: str = "",
 ) -> None:
-    """Draw consistent report navigation on every page."""
-
-    pdf_canvas.saveState()
-
-    pdf_canvas.setStrokeColor(MID_GRAY)
-    pdf_canvas.setLineWidth(0.5)
-    pdf_canvas.line(
-        document.leftMargin,
-        letter[1] - 0.55 * inch,
-        letter[0] - document.rightMargin,
-        letter[1] - 0.55 * inch,
+    """Draw the common branded report frame."""
+    draw_report_frame(
+        pdf_canvas, document, report_label=report_label, team_abbreviation=team_abbreviation
     )
-
-    pdf_canvas.setFont(
-        "Helvetica-Bold",
-        7.5,
-    )
-    pdf_canvas.setFillColor(NAVY)
-    pdf_canvas.drawString(
-        document.leftMargin,
-        letter[1] - 0.42 * inch,
-        "NBA ROTATION LAB",
-    )
-
-    pdf_canvas.setFont(
-        "Helvetica",
-        7,
-    )
-    pdf_canvas.setFillColor(TEXT_GRAY)
-    available_width = (
-        letter[0]
-        - document.leftMargin
-        - document.rightMargin
-        - stringWidth("NBA ROTATION LAB", "Helvetica-Bold", 7.5)
-        - 20
-    )
-    clipped_label = _clip_text(
-        report_label,
-        available_width,
-        "Helvetica",
-        7,
-    )
-    pdf_canvas.drawRightString(
-        letter[0] - document.rightMargin,
-        letter[1] - 0.42 * inch,
-        clipped_label,
-    )
-
-    pdf_canvas.setStrokeColor(MID_GRAY)
-    pdf_canvas.line(
-        document.leftMargin,
-        0.48 * inch,
-        letter[0] - document.rightMargin,
-        0.48 * inch,
-    )
-    pdf_canvas.drawString(
-        document.leftMargin,
-        0.30 * inch,
-        "Decision-support analysis | NBA Rotation Lab",
-    )
-    pdf_canvas.drawRightString(
-        letter[0] - document.rightMargin,
-        0.30 * inch,
-        f"Page {document.page}",
-    )
-
-    pdf_canvas.restoreState()
 
 
 def _format_date(value: object) -> str:

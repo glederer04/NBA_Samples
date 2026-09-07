@@ -255,3 +255,36 @@ def lineup_card(
         ],
         className="lineup-card",
     )
+
+
+def team_logo(team_abbreviation: str) -> html.Img:
+    """Use bundled NBA logos; keep a readable abbreviation alongside them."""
+
+    from rotation_lab.config import ASSETS_DIR
+
+    abbreviation = team_abbreviation.strip().upper()
+    filename = f"{abbreviation}.svg"
+    exists = (ASSETS_DIR / "team-logos" / filename).is_file()
+    return html.Img(
+        src=f"/assets/team-logos/{filename}" if exists else "/assets/team-placeholder.svg",
+        alt=f"{abbreviation} logo",
+        className="team-logo",
+    )
+
+
+def get_team_options() -> list[dict]:
+    """Add team branding in the presentation layer without changing data results."""
+
+    from rotation_lab.dashboard.data import get_dashboard_teams
+
+    return [
+        {
+            "value": option["value"],
+            "search": option["value"],
+            "label": html.Span(
+                [team_logo(option["value"]), html.Span(option["label"])],
+                className="team-option",
+            ),
+        }
+        for option in get_dashboard_teams()
+    ]

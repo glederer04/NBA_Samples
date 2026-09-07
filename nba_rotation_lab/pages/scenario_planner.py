@@ -1,5 +1,6 @@
 """Interactive rotation scenario planning page."""
 
+import logging
 from base64 import b64encode
 from typing import Any
 
@@ -19,7 +20,8 @@ from rotation_lab.dashboard.components import (
     format_signed,
     metric_card,
 )
-from rotation_lab.dashboard.data import get_dashboard_teams
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
+from rotation_lab.dashboard.data import get_planner_recommendations as get_lineup_recommendations
 from rotation_lab.modeling import (
     LineupAllocation,
     RotationPlanProjection,
@@ -28,7 +30,6 @@ from rotation_lab.modeling import (
 )
 from rotation_lab.recommendations import (
     LineupRecommendation,
-    get_lineup_recommendations,
 )
 from rotation_lab.reporting import generate_scenario_report_bytes
 
@@ -87,6 +88,7 @@ def layout() -> html.Div:
                         [
                             html.Label(
                                 "TEAM",
+                                htmlFor="scenario-team-selector",
                                 className="filter-label",
                             ),
                             dcc.Dropdown(
@@ -157,6 +159,11 @@ def layout() -> html.Div:
                             ),
                             dcc.Download(
                                 id="download-scenario-report",
+                            ),
+                            html.Div(
+                                id="scenario-report-status",
+                                className="report-status",
+                                role="status",
                             ),
                         ],
                         className=("download-report-control scenario-download-control"),
@@ -232,6 +239,7 @@ def allocation_control(
             ),
             html.Label(
                 "FIVE-PLAYER UNIT",
+                htmlFor=f"scenario-lineup-{slot}",
                 className="filter-label",
             ),
             dcc.Dropdown(
@@ -242,13 +250,16 @@ def allocation_control(
                 maxHeight=360,
                 placeholder="Select a lineup",
             ),
+            html.Div(id=f"scenario-lineup-{slot}-summary", className="selected-lineup-summary"),
             html.Label(
                 "PLANNED MINUTES",
+                htmlFor=f"scenario-minutes-{slot}",
                 className="filter-label scenario-minutes-label",
             ),
             dcc.Input(
                 id=f"scenario-minutes-{slot}",
                 type="number",
+                debounce=0.3,
                 value=minutes_value,
                 min=0,
                 max=48,
@@ -569,6 +580,7 @@ def calculate_scenario(
 
 @callback(
     Output("download-scenario-report", "data"),
+    Output("scenario-report-status", "children"),
     Input("download-scenario-report-button", "n_clicks"),
     State("scenario-team-selector", "value"),
     State("scenario-lineup-a", "value"),
@@ -577,8 +589,27 @@ def calculate_scenario(
     State("scenario-minutes-a", "value"),
     State("scenario-minutes-b", "value"),
     State("scenario-minutes-c", "value"),
+    running=[
+        (Output("download-scenario-report-button", "disabled"), True, False),
+        (Output("download-scenario-report-button", "children"), "Preparing PDF…", "Download PDF"),
+    ],
     prevent_initial_call=True,
 )
+def handle_scenario_report_download(*args: Any) -> tuple:
+    """Keep export failures visible and allow retry without losing the selection."""
+    try:
+        payload = download_scenario_report(*args)
+    except Exception:
+        logging.getLogger(__name__).exception("PDF export failed")
+        return no_update, "Could not create the PDF. Please retry."
+    if payload is no_update:
+        return (
+            no_update,
+            "Use positive minutes totaling at most 48 across unique lineups before downloading.",
+        )
+    return payload, "PDF ready. Check your browser downloads."
+
+
 def download_scenario_report(
     n_clicks: int | None,
     team_abbreviation: str | None,
@@ -748,3 +779,19 @@ def scenario_warning(message: str) -> html.Div:
         ],
         className="scenario-warning",
     )
+
+
+def selected_lineup_summary(value: str | None, options: list[dict] | None) -> str:
+    """Keep the complete selected unit readable even when its dropdown is narrow."""
+    return next(
+        (option["label"].split(" — ")[0] for option in options or [] if option["value"] == value),
+        "No lineup selected.",
+    )
+
+
+for _slot in ("a", "b", "c"):
+    callback(
+        Output(f"scenario-lineup-{_slot}-summary", "children"),
+        Input(f"scenario-lineup-{_slot}", "value"),
+        Input(f"scenario-lineup-{_slot}", "options"),
+    )(selected_lineup_summary)

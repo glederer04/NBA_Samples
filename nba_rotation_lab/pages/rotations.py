@@ -19,8 +19,8 @@ from rotation_lab.dashboard.components import (
     format_signed,
     metric_card,
 )
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.data import (
-    get_dashboard_teams,
     get_rotation_timeline,
     get_team_games,
 )
@@ -83,6 +83,7 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "TEAM",
+                                    htmlFor="rotation-team-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
@@ -99,6 +100,7 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "GAME",
+                                    htmlFor="rotation-game-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
@@ -321,49 +323,29 @@ def build_rotation_figure(
 
     figure = go.Figure()
 
-    for stint in stints:
-        (
-            player_id,
-            player_name,
-            stint_number,
-            in_time_seconds,
-            out_time_seconds,
-            duration_seconds,
-        ) = stint
-
-        figure.add_trace(
-            go.Bar(
-                x=[float(duration_seconds) / 60],
-                y=[str(player_name)],
-                base=[float(in_time_seconds) / 60],
-                orientation="h",
-                marker={
-                    "color": color_map[int(player_id)],
-                    "line": {
-                        "color": "#ffffff",
-                        "width": 1,
-                    },
-                },
-                customdata=[
-                    [
-                        int(stint_number),
-                        float(in_time_seconds) / 60,
-                        float(out_time_seconds) / 60,
-                        float(duration_seconds) / 60,
-                    ]
-                ],
-                hovertemplate=(
-                    "<b>%{y}</b><br>"
-                    "Stint %{customdata[0]}<br>"
-                    "Game minute: "
-                    "%{customdata[1]:.2f}-"
-                    "%{customdata[2]:.2f}<br>"
-                    "Duration: %{customdata[3]:.2f} min"
-                    "<extra></extra>"
-                ),
-                showlegend=False,
-            )
+    # A single trace preserves every stint and tooltip while avoiding per-stint Plotly overhead.
+    figure.add_trace(
+        go.Bar(
+            x=[float(stint[5]) / 60 for stint in stints],
+            y=[str(stint[1]) for stint in stints],
+            base=[float(stint[3]) / 60 for stint in stints],
+            orientation="h",
+            marker={
+                "color": [color_map[int(stint[0])] for stint in stints],
+                "line": {"color": "#ffffff", "width": 1},
+            },
+            customdata=[
+                [int(stint[2]), float(stint[3]) / 60, float(stint[4]) / 60, float(stint[5]) / 60]
+                for stint in stints
+            ],
+            hovertemplate=(
+                "<b>%{y}</b><br>Stint %{customdata[0]}<br>"
+                "Game minute: %{customdata[1]:.2f}-%{customdata[2]:.2f}<br>"
+                "Duration: %{customdata[3]:.2f} min<extra></extra>"
+            ),
+            showlegend=False,
         )
+    )
 
     markers = build_period_markers(game_end_seconds)
 
@@ -480,6 +462,9 @@ def build_rotation_readout(
     data: dict,
 ) -> html.Div:
     """Create deterministic rotation-management notes."""
+
+    if not data["stints"]:
+        return html.Div("No player stints are available for this game.", className="empty-state")
 
     player_minutes: defaultdict[str, float] = defaultdict(float)
     player_stint_counts: defaultdict[str, int] = defaultdict(int)

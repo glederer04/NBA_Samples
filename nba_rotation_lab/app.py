@@ -118,14 +118,14 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.Div(
-                            "DATA STATUS",
+                            "DATASET",
                             className="sidebar-label",
                         ),
                         html.Div(
                             [
                                 html.Span(className="status-dot"),
                                 html.Span(
-                                    "Validated sample",
+                                    "Development sample",
                                     className="status-text",
                                 ),
                             ],

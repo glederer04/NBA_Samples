@@ -10,12 +10,14 @@ from dash import (
 )
 
 from rotation_lab.dashboard.components import (
+    format_period_label,
     format_signed,
     lineup_card,
     metric_card,
+    team_logo,
 )
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.data import (
-    get_dashboard_teams,
     get_team_overview,
 )
 
@@ -251,7 +253,11 @@ def build_recent_games(
             html.Tr(
                 [
                     html.Td(str(game_date)),
-                    html.Td(f"{location} {opponent}"),
+                    html.Td(
+                        html.Span(
+                            [team_logo(opponent), f"{location} {opponent}"], className="team-option"
+                        )
+                    ),
                     html.Td(
                         result,
                         className=result_class,
@@ -259,8 +265,8 @@ def build_recent_games(
                     html.Td(f"{points_for}-{points_against}"),
                     html.Td(format_signed(plus_minus)),
                     html.Td(str(lineups_used)),
-                    html.Td(f"Q{best_period}"),
-                    html.Td(f"Q{worst_period}"),
+                    html.Td(format_period_label(int(best_period))),
+                    html.Td(format_period_label(int(worst_period))),
                     html.Td(
                         dcc.Link(
                             str(game_id),

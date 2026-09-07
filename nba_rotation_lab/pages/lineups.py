@@ -11,12 +11,12 @@ from dash import (
     register_page,
 )
 
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.components import (
     lineup_card,
     metric_card,
 )
 from rotation_lab.dashboard.data import (
-    get_dashboard_teams,
     get_lineup_explorer,
     get_team_players,
 )
@@ -59,6 +59,7 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "TEAM",
+                                    htmlFor="lineup-team-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
@@ -75,6 +76,7 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "REQUIRED PLAYERS",
+                                    htmlFor="lineup-player-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
@@ -94,11 +96,13 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "MINIMUM MINUTES",
+                                    htmlFor="lineup-minimum-minutes",
                                     className="filter-label",
                                 ),
                                 dcc.Input(
                                     id="lineup-minimum-minutes",
                                     type="number",
+                                    debounce=0.3,
                                     min=0,
                                     step=1,
                                     value=5,
@@ -372,12 +376,25 @@ def update_lineup_explorer(
         },
         style_cell={
             "padding": "12px",
-            "fontFamily": "inherit",
+            "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+            "minWidth": "80px",
+            "width": "90px",
+            "maxWidth": "150px",
             "fontSize": "12px",
             "textAlign": "left",
             "whiteSpace": "normal",
             "height": "auto",
         },
+        style_cell_conditional=[
+            {
+                "if": {"column_id": "lineup"},
+                "minWidth": "320px",
+                "width": "320px",
+                "maxWidth": "420px",
+            },
+            {"if": {"column_id": "sample"}, "minWidth": "120px", "width": "120px"},
+        ],
+        style_filter={"backgroundColor": "#f6f8fb", "color": "#53657d"},
         style_header={
             "backgroundColor": "#111b2c",
             "color": "#ffffff",

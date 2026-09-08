@@ -263,11 +263,16 @@ def team_logo(team_abbreviation: str) -> html.Img:
     from rotation_lab.config import ASSETS_DIR
 
     abbreviation = team_abbreviation.strip().upper()
-    filename = f"{abbreviation}.svg"
-    exists = (ASSETS_DIR / "team-logos" / filename).is_file()
+    filename = f"{abbreviation}.png"
+    exists = (ASSETS_DIR / "team-logos" / "normalized" / filename).is_file()
     return html.Img(
-        src=f"/assets/team-logos/{filename}" if exists else "/assets/team-placeholder.svg",
-        alt=f"{abbreviation} logo",
+        src=f"/assets/team-logos/normalized/{filename}"
+        if exists
+        else "/assets/team-placeholder.svg",
+        alt="",
+        title=abbreviation,
+        width=28,
+        height=28,
         className="team-logo",
     )
 
@@ -288,3 +293,21 @@ def get_team_options() -> list[dict]:
         }
         for option in get_dashboard_teams()
     ]
+
+
+def abbreviate_player_name(name: str) -> str:
+    """Use first initial plus surname; retain suffixes and compound surnames."""
+    parts = name.strip().split()
+    if len(parts) < 2:
+        return name.strip()
+    first = parts[0] if len(parts[0]) <= 2 and parts[0].isupper() else f"{parts[0][0]}."
+    return f"{first} {' '.join(parts[1:])}"
+
+
+def compact_lineup_names(lineup_names: str) -> str:
+    """Use full names for collisions so compact labels stay unambiguous."""
+    names = lineup_names.split(" | ")
+    short = [abbreviate_player_name(name) for name in names]
+    return " · ".join(
+        name if short.count(label) > 1 else label for name, label in zip(names, short, strict=True)
+    )

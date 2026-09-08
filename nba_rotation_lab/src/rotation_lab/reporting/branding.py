@@ -15,7 +15,7 @@ def draw_report_frame(canvas, document, *, report_label: str, team_abbreviation:
     left, right = document.leftMargin, width - document.rightMargin
     canvas.setFillColor(colors.HexColor("#111B2C"))
     canvas.rect(0, height - 10, width, 10, fill=1, stroke=0)
-    logo = ASSETS_DIR / "team-logos" / f"{team_abbreviation.upper()}.png"
+    logo = ASSETS_DIR / "team-logos" / "normalized" / f"{team_abbreviation.upper()}.png"
     text_left = left
     if logo.is_file():
         canvas.drawImage(

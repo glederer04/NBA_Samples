@@ -3,11 +3,10 @@
 from io import BytesIO
 from pathlib import Path
 
-from dash import no_update
 from pypdf import PdfReader
 
 import app  # noqa: F401
-from pages import game_review, overview, rotations, scenario_planner
+from pages import overview, rotations
 from rotation_lab.dashboard.cache import database_cached
 from rotation_lab.reporting.game_report import generate_game_report_bytes
 
@@ -55,25 +54,6 @@ def test_overview_uses_overtime_labels() -> None:
     cells = table.children[1].children[0].children
     assert cells[6].children == "OT1"
     assert cells[7].children == "OT2"
-
-
-def test_export_wrappers_report_invalid_selection_and_recover_from_errors(monkeypatch) -> None:
-    payload, message = game_review.handle_game_report_download(1, None, None)
-    assert payload is no_update
-    assert "valid game" in message
-    payload, message = scenario_planner.handle_scenario_report_download(
-        1, None, None, None, None, None, None, None
-    )
-    assert payload is no_update
-    assert "positive minutes" in message
-
-    def fail(*args):
-        raise RuntimeError("test failure")
-
-    monkeypatch.setattr(game_review, "download_game_report", fail)
-    payload, message = game_review.handle_game_report_download(1, "NYK", "game")
-    assert payload is no_update
-    assert "retry" in message
 
 
 def test_game_pdf_includes_stretches_beyond_seven() -> None:

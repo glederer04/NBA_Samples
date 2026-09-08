@@ -1,6 +1,5 @@
 """Interactive Game Review dashboard page."""
 
-import logging
 from base64 import b64encode
 from typing import Any
 
@@ -127,17 +126,23 @@ def layout(
                                         "REPORT",
                                         className="filter-label",
                                     ),
-                                    html.Button(
+                                    html.A(
                                         "Download PDF",
                                         id="download-game-report-button",
-                                        n_clicks=0,
+                                        href=None,
+                                        target="_blank",
+                                        download="",
                                         className="report-download-button",
                                     ),
                                 ],
                                 className="download-report-control",
                             ),
-                            dcc.Download(
-                                id="download-game-report",
+                            html.A(
+                                "Preview PDF",
+                                id="preview-game-report",
+                                href=None,
+                                target="_blank",
+                                className="report-preview-link",
                             ),
                             html.Div(
                                 id="game-report-status", className="report-status", role="status"
@@ -255,30 +260,6 @@ def update_game_options(
     selected_game = current_game_id if current_game_id in values else values[0] if values else None
 
     return options, selected_game
-
-
-@callback(
-    Output("download-game-report", "data"),
-    Output("game-report-status", "children"),
-    Input("download-game-report-button", "n_clicks"),
-    State("review-team-selector", "value"),
-    State("review-game-selector", "value"),
-    running=[
-        (Output("download-game-report-button", "disabled"), True, False),
-        (Output("download-game-report-button", "children"), "Preparing PDF…", "Download PDF"),
-    ],
-    prevent_initial_call=True,
-)
-def handle_game_report_download(*args: Any) -> tuple:
-    """Keep export failures visible and allow retry without losing the selection."""
-    try:
-        payload = download_game_report(*args)
-    except Exception:
-        logging.getLogger(__name__).exception("PDF export failed")
-        return no_update, "Could not create the PDF. Please retry."
-    if payload is no_update:
-        return no_update, "Select a valid game before downloading."
-    return payload, "PDF ready. Check your browser downloads."
 
 
 def download_game_report(
@@ -672,3 +653,20 @@ def empty_game_review() -> tuple:
         [],
         [],
     )
+
+
+@callback(
+    Output("download-game-report-button", "href"),
+    Output("preview-game-report", "href"),
+    Output("game-report-status", "children"),
+    Input("review-team-selector", "value"),
+    Input("review-game-selector", "value"),
+)
+def game_report_links(team: str | None, game_id: str | None) -> tuple:
+    """Expose a normal browser download and a separately accessible preview."""
+    if not team or not game_id or game_id not in {row["value"] for row in get_team_games(team)}:
+        return None, None, "Select a game to download its report."
+    from urllib.parse import quote
+
+    url = f"/reports/game/{quote(team, safe='')}/{quote(game_id, safe='')}.pdf"
+    return url, url + "?view=1", "PDF · Game summary, lineups, and qualifying rotation stretches."

@@ -7,7 +7,8 @@ document.addEventListener(
 
         if (
             !(image instanceof HTMLImageElement) ||
-            !image.classList.contains("player-headshot-image") ||
+            (!image.classList.contains("player-headshot-image") &&
+                !image.classList.contains("team-logo")) ||
             image.dataset.fallbackApplied === "true"
         ) {
             return;
@@ -15,7 +16,9 @@ document.addEventListener(
 
         image.dataset.fallbackApplied = "true";
         image.classList.add("is-placeholder");
-        image.src = "/assets/player-placeholder.svg";
+        image.src = image.classList.contains("team-logo")
+            ? "/assets/team-placeholder.svg"
+            : "/assets/player-placeholder.svg";
     },
     true
 );

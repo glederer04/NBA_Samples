@@ -11,11 +11,12 @@ from dash import (
     register_page,
 )
 
-from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.components import (
+    compact_lineup_names,
     lineup_card,
     metric_card,
 )
+from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.data import (
     get_lineup_explorer,
     get_team_players,
@@ -149,9 +150,9 @@ layout = html.Div(
                     className="section-title",
                 ),
                 html.P(
-                    "Use the table headers to sort. Positive "
-                    "plus-minus should still be evaluated alongside "
-                    "minutes and the sample-size label.",
+                    "Click a column heading to sort. The light row below contains filters "
+                    "(text or comparisons such as > 10). Names use first initials; "
+                    "hover a lineup for full names. PF/PA are points for/against.",
                     className="section-description",
                 ),
                 html.Div(
@@ -276,7 +277,7 @@ def update_lineup_explorer(
         ]
     ] = [
         {
-            "lineup": str(row[1]),
+            "lineup": compact_lineup_names(str(row[1])),
             "games": int(row[2]),
             "stints": int(row[3]),
             "minutes": float(row[4]),
@@ -293,7 +294,11 @@ def update_lineup_explorer(
     ]
 
     table = dash_table.DataTable(
+        id="complete-lineup-table",
         data=table_data,
+        tooltip_data=[{"lineup": {"value": str(row[1]), "type": "text"}} for row in rows],
+        tooltip_duration=None,
+        filter_options={"placeholder_text": "Filter…", "case": "insensitive"},
         columns=[
             {
                 "name": "Lineup",
@@ -303,16 +308,19 @@ def update_lineup_explorer(
                 "name": "Games",
                 "id": "games",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "Stints",
                 "id": "stints",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "Minutes",
                 "id": "minutes",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
                 "format": {
                     "specifier": ".2f",
                 },
@@ -321,21 +329,25 @@ def update_lineup_explorer(
                 "name": "PF",
                 "id": "points_for",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "PA",
                 "id": "points_against",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "+/-",
                 "id": "plus_minus",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "+/- per 48",
                 "id": "plus_minus_per_48",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
                 "format": {
                     "specifier": "+.2f",
                 },
@@ -344,6 +356,7 @@ def update_lineup_explorer(
                 "name": "PF per 48",
                 "id": "points_for_per_48",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
                 "format": {
                     "specifier": ".2f",
                 },
@@ -352,6 +365,7 @@ def update_lineup_explorer(
                 "name": "PA per 48",
                 "id": "points_against_per_48",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
                 "format": {
                     "specifier": ".2f",
                 },
@@ -360,6 +374,7 @@ def update_lineup_explorer(
                 "name": "Boundary",
                 "id": "boundary_points",
                 "type": "numeric",
+                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "Sample",
@@ -388,13 +403,18 @@ def update_lineup_explorer(
         style_cell_conditional=[
             {
                 "if": {"column_id": "lineup"},
-                "minWidth": "320px",
-                "width": "320px",
+                "minWidth": "300px",
+                "width": "300px",
                 "maxWidth": "420px",
             },
             {"if": {"column_id": "sample"}, "minWidth": "120px", "width": "120px"},
         ],
-        style_filter={"backgroundColor": "#f6f8fb", "color": "#53657d"},
+        style_filter={
+            "backgroundColor": "#eef3f9",
+            "color": "#334155",
+            "borderBottom": "2px solid #cbd5e1",
+            "padding": "8px",
+        },
         style_header={
             "backgroundColor": "#111b2c",
             "color": "#ffffff",

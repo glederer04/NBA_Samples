@@ -7,6 +7,7 @@ from dash import Dash, html, page_container
 from flask import Response, jsonify
 
 from rotation_lab.database import connect_database
+from rotation_lab.reporting.downloads import reports
 
 app = Dash(
     __name__,
@@ -20,6 +21,7 @@ app = Dash(
 )
 
 server = app.server
+server.register_blueprint(reports)
 
 
 @server.get("/health")
@@ -93,6 +95,11 @@ app.layout = html.Div(
                             active="partial",
                         ),
                         dbc.NavLink(
+                            "Rotation Timeline",
+                            href="/rotations",
+                            active="exact",
+                        ),
+                        dbc.NavLink(
                             "Recommendations",
                             href="/recommendations",
                             active="exact",
@@ -105,11 +112,6 @@ app.layout = html.Div(
                         dbc.NavLink(
                             "Lineup Explorer",
                             href="/lineups",
-                            active="exact",
-                        ),
-                        dbc.NavLink(
-                            "Rotation Timeline",
-                            href="/rotations",
                             active="exact",
                         ),
                     ],

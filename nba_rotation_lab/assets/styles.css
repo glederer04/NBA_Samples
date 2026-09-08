@@ -1194,3 +1194,29 @@ body {
     .scenario-page-header, .recommendation-page-header { align-items: stretch; }
     .scenario-team-filter, .recommendation-team-filter { width: 100%; }
 }
+
+/* Consistent optical logo sizing in selected values, menus, and game rows. */
+.team-option { min-height: 30px; gap: 8px; line-height: 1.2; vertical-align: middle; }
+.team-logo { display: block; width: 28px; height: 28px; flex: 0 0 28px; object-fit: contain; }
+#complete-lineup-table .dash-filter input {
+    color: #334155 !important; background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important; border-radius: 4px;
+    text-align: left !important; padding: 6px 8px !important;
+    font-family: inherit !important; font-size: 12px !important;
+}
+#complete-lineup-table .dash-filter input::placeholder { color: #64748b !important; opacity: 1; }
+#complete-lineup-table .dash-filter--case {
+    color: #475569 !important; background: #e2e8f0 !important; opacity: 1 !important;
+    border-radius: 3px; margin: 0 4px; font-size: 10px;
+}
+#complete-lineup-table .dash-filter--case--sensitive { color: #fff !important; background: #2366d1 !important; }
+.report-download-button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.report-download-button:hover { color: #fff; }
+.report-download-button:not([href]) { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+.report-preview-link { color: var(--blue); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.report-preview-link:not([href]) { color: var(--text-muted); cursor: not-allowed; }
+.scenario-download-control .report-preview-link { margin-left: 16px; }
+#complete-lineup-table .dash-filter > div { display: flex; align-items: center; gap: 4px; }
+#complete-lineup-table .dash-filter input[type="text"] { width: 100% !important; min-width: 0; flex: 1 1 auto; }
+#complete-lineup-table .dash-filter input[type="button"] { width: 25px !important; flex: 0 0 25px; padding: 3px !important; margin: 0; }
+#complete-lineup-table .dash-filter:not([data-dash-column="lineup"]):not([data-dash-column="sample"]) input[type="button"] { display: none; }

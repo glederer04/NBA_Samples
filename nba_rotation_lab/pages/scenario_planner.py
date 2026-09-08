@@ -1,6 +1,5 @@
 """Interactive rotation scenario planning page."""
 
-import logging
 from base64 import b64encode
 from typing import Any
 
@@ -8,7 +7,6 @@ import plotly.graph_objects as go
 from dash import (
     Input,
     Output,
-    State,
     callback,
     dcc,
     html,
@@ -151,14 +149,20 @@ def layout() -> html.Div:
                                 "REPORT",
                                 className="filter-label",
                             ),
-                            html.Button(
+                            html.A(
                                 "Download PDF",
                                 id="download-scenario-report-button",
-                                n_clicks=0,
+                                href=None,
+                                target="_blank",
+                                download="",
                                 className="report-download-button",
                             ),
-                            dcc.Download(
-                                id="download-scenario-report",
+                            html.A(
+                                "Preview PDF",
+                                id="preview-scenario-report",
+                                href=None,
+                                target="_blank",
+                                className="report-preview-link",
                             ),
                             html.Div(
                                 id="scenario-report-status",
@@ -578,38 +582,6 @@ def calculate_scenario(
     return metrics, readout, figure
 
 
-@callback(
-    Output("download-scenario-report", "data"),
-    Output("scenario-report-status", "children"),
-    Input("download-scenario-report-button", "n_clicks"),
-    State("scenario-team-selector", "value"),
-    State("scenario-lineup-a", "value"),
-    State("scenario-lineup-b", "value"),
-    State("scenario-lineup-c", "value"),
-    State("scenario-minutes-a", "value"),
-    State("scenario-minutes-b", "value"),
-    State("scenario-minutes-c", "value"),
-    running=[
-        (Output("download-scenario-report-button", "disabled"), True, False),
-        (Output("download-scenario-report-button", "children"), "Preparing PDF…", "Download PDF"),
-    ],
-    prevent_initial_call=True,
-)
-def handle_scenario_report_download(*args: Any) -> tuple:
-    """Keep export failures visible and allow retry without losing the selection."""
-    try:
-        payload = download_scenario_report(*args)
-    except Exception:
-        logging.getLogger(__name__).exception("PDF export failed")
-        return no_update, "Could not create the PDF. Please retry."
-    if payload is no_update:
-        return (
-            no_update,
-            "Use positive minutes totaling at most 48 across unique lineups before downloading.",
-        )
-    return payload, "PDF ready. Check your browser downloads."
-
-
 def download_scenario_report(
     n_clicks: int | None,
     team_abbreviation: str | None,
@@ -795,3 +767,40 @@ for _slot in ("a", "b", "c"):
         Input(f"scenario-lineup-{_slot}", "value"),
         Input(f"scenario-lineup-{_slot}", "options"),
     )(selected_lineup_summary)
+
+
+@callback(
+    Output("download-scenario-report-button", "href"),
+    Output("preview-scenario-report", "href"),
+    Output("scenario-report-status", "children"),
+    Input("scenario-team-selector", "value"),
+    Input("scenario-lineup-a", "value"),
+    Input("scenario-lineup-b", "value"),
+    Input("scenario-lineup-c", "value"),
+    Input("scenario-minutes-a", "value"),
+    Input("scenario-minutes-b", "value"),
+    Input("scenario-minutes-c", "value"),
+)
+def scenario_report_links(team, lineup_a, lineup_b, lineup_c, minutes_a, minutes_b, minutes_c):
+    """A changed or invalid plan cannot retain a stale download link."""
+    from urllib.parse import quote
+
+    from rotation_lab.reporting.downloads import scenario_allocations, scenario_query
+
+    if not team:
+        return None, None, "Select a team to create a report."
+    pairs = [
+        (key, value)
+        for key, value in zip(
+            [lineup_a, lineup_b, lineup_c], [minutes_a, minutes_b, minutes_c], strict=True
+        )
+        if key and value is not None and value > 0
+    ]
+    keys = [key for key, _ in pairs]
+    minutes = [float(value) for _, value in pairs]
+    try:
+        project_rotation_plan(scenario_allocations(team, keys, minutes))
+    except ValueError as error:
+        return None, None, str(error)
+    url = f"/reports/scenario/{quote(team, safe='')}.pdf?" + scenario_query(keys, minutes)
+    return url, url + "&view=1", "2-page PDF · Current plan, comparison, and lineup detail."

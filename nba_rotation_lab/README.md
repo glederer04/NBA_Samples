@@ -206,3 +206,5 @@ From this directory, create a Python 3.11–3.13 environment, install with `pyth
 For a fresh checkout, use the included sample database with `ROTATION_LAB_DATABASE_PATH=data/demo/rotation_lab.duckdb python app.py`. Run `python -m pytest` and `ruff check .` for validation.
 
 The [September 2026 quality review](docs/quality-review-2026-09.md) documents responsive layout fixes, bundled team logos, query caching, rotation-chart optimization, and improved PDF generation. Game PDFs include every qualifying stretch returned by the existing query and can span more than two pages; scenario reports retain their two-page design.
+
+The [follow-up review](docs/quality-review-followup-2026-09.md) covers normalized dropdown logos, browser-native PDF downloads and previews, compact lineup names, corrected numeric filtering, reordered navigation, verification timings, and suggested next improvements.

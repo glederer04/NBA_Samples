@@ -152,10 +152,7 @@ layout = html.Div(
                 html.P(
                     "Click a column heading to sort. The light row below contains filters "
                     "(text or comparisons such as > 10). Names use first initials; "
-                    "hover a lineup for full names. PF/PA are points for/against. Boundary pts "
-                    "counts scoring by either team at an exact lineup-change timestamp; these "
-                    "points are assigned to the ending lineup and flagged for review, not "
-                    "counted as errors.",
+                    "hover a lineup for full names. PF/PA are points for/against.",
                     className="section-description",
                 ),
                 html.Div(
@@ -290,7 +287,6 @@ def update_lineup_explorer(
             "plus_minus_per_48": float(row[8]),
             "points_for_per_48": float(row[9]),
             "points_against_per_48": float(row[10]),
-            "boundary_points": int(row[11]),
             "sample": str(row[12]).title(),
         }
         for row in rows
@@ -372,12 +368,6 @@ def update_lineup_explorer(
                 "format": {
                     "specifier": ".2f",
                 },
-            },
-            {
-                "name": "Boundary pts",
-                "id": "boundary_points",
-                "type": "numeric",
-                "filter_options": {"case": "sensitive"},
             },
             {
                 "name": "Sample",

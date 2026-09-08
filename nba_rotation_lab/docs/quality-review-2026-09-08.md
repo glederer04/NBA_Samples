@@ -36,8 +36,16 @@ See [Player analysis and planning roadmap](player-analysis-and-planning-roadmap.
 
 ## Verification
 
-- 97 tests passed after the initial implementation; Ruff lint and formatting passed.
+- 99 tests passed after the final corrections; Ruff lint and formatting passed. GitHub CI also passed for the deployed code commit `2677855`.
 - Added tests for wheel-style asset resolution, actual PNG responses, shared selection restoration/deep links/team changes, evidence filtering before limit, stint color values, and score reconciliation for NYK and SAS.
 - Built a wheel and loaded it from a separate installation directory with the demo database, matching Render's installation style; NYK resolves to the normalized image and returns HTTP 200.
 - Stint margins sum to five times the team-game margin in both tested games, reflecting five players on court.
-- Native Safari inspection initially confirmed the deployed URL. Further visual verification was interrupted by the Mac locking; this check must be completed after unlock. No claim is made that every browser/device has been exhaustively tested.
+- Refreshed and visually checked the deployed site in native Safari: NYK/SAS logos render in selectors and menus, recommendation views show established samples, and stint colors display correctly.
+- The Safari interaction check exposed a page-mount reset missed by the first unit tests. Each game-page instance now has an identifier, allowing the shared selection callback to distinguish new page mounts from user changes. Verified April 10 transfers from Game Review to Rotation Timeline, then April 9 transfers back, on the deployed site.
+- Corrected a Safari sidebar highlight that stayed on the previous route; active navigation now follows the Dash pathname explicitly. Verified live.
+- Revisited all six pages locally. Confirmed persistence through an unrelated page and browser refresh in the in-app browser. Checked a 390-pixel phone viewport: no document-wide horizontal overflow, with the rotation map and labels contained in their panel.
+- Standard bundled PNGs eliminate the deployment lookup failure without browser-specific logo code. Native Safari and the in-app browser were exercised in this pass; exhaustive coverage of every browser/device is not claimed.
+
+## Additional UI improvement to consider
+
+Use loading placeholders for first-load charts and metrics so Render/network delays do not briefly expose empty Plotly axes. Keep the current data visible during filter updates where appropriate. This is separate from the corrected selection and scoring behavior.

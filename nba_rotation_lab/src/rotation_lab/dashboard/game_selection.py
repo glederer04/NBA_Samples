@@ -6,14 +6,21 @@ from rotation_lab.dashboard.data import get_team_games
 
 
 def resolve_selection(team, game, saved, linked, trigger):
-    if trigger is None:
-        selection = linked or saved or {}
+    saved = saved or {}
+    context = linked or {}
+    instance = context.get("instance")
+    mounted = instance is not None and instance != saved.get("instance")
+    if trigger is None or mounted:
+        selection = context.get("selection") or (context if "team" in context else None) or saved
         team = selection.get("team", team)
         game = selection.get("game", game)
     options = get_team_games(team) if team else []
     valid = {option["value"] for option in options}
     game = game if game in valid else options[0]["value"] if options else None
-    return {"team": team, "game": game}, team, game, options
+    selection = {"team": team, "game": game}
+    if instance is not None:
+        selection["instance"] = instance
+    return selection, team, game, options
 
 
 @callback(

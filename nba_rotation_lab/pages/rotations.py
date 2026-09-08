@@ -1,6 +1,7 @@
 """Interactive player Rotation Timeline page."""
 
 from collections import defaultdict
+from uuid import uuid4
 
 import plotly.graph_objects as go
 from dash import (
@@ -37,141 +38,143 @@ DEFAULT_TEAM = "NYK" if "NYK" in TEAM_VALUES else TEAM_VALUES[0] if TEAM_VALUES 
 DEFAULT_GAME_OPTIONS = get_team_games(DEFAULT_TEAM) if DEFAULT_TEAM else []
 DEFAULT_GAME = DEFAULT_GAME_OPTIONS[0]["value"] if DEFAULT_GAME_OPTIONS else None
 
-layout = html.Div(
-    [
-        dcc.Store(id="game-link-selection"),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.Div(
-                            "ROTATION MANAGEMENT",
-                            className="eyebrow",
-                        ),
-                        html.H1(
-                            "Rotation Timeline",
-                            className="page-title",
-                        ),
-                        html.P(
-                            "Player stint timing, substitution patterns, "
-                            "and rotation depth across the full game.",
-                            className="page-subtitle",
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.Label(
-                                    "TEAM",
-                                    htmlFor="game-team-selector",
-                                    className="filter-label",
-                                ),
-                                dcc.Dropdown(
-                                    id="game-team-selector",
-                                    options=TEAM_OPTIONS,
-                                    value=DEFAULT_TEAM,
-                                    clearable=False,
-                                    maxHeight=360,
-                                ),
-                            ],
-                            className="rotation-filter team",
-                        ),
-                        html.Div(
-                            [
-                                html.Label(
-                                    "GAME",
-                                    htmlFor="game-selector",
-                                    className="filter-label",
-                                ),
-                                dcc.Dropdown(
-                                    id="game-selector",
-                                    options=DEFAULT_GAME_OPTIONS,
-                                    value=DEFAULT_GAME,
-                                    clearable=False,
-                                    maxHeight=360,
-                                ),
-                            ],
-                            className="rotation-filter game",
-                        ),
-                    ],
-                    className="rotation-filter-row",
-                ),
-            ],
-            className="page-header rotation-page-header",
-        ),
-        html.Div(
-            id="rotation-metrics",
-            className="metric-grid",
-        ),
-        html.Div(
-            [
-                html.Div(
-                    "PLAYER STINTS",
-                    className="section-eyebrow",
-                ),
-                html.H2(
-                    "Full-Game Rotation Map",
-                    className="section-title",
-                ),
-                html.P(
-                    "Each bar represents one continuous player stint. "
-                    "Vertical markers show quarter and overtime starts. "
-                    "Green = positive, gray = even, red = negative team +/- during that stint. "
-                    "Hover for the exact margin; color intensity is scaled within this game.",
-                    className="section-description",
-                ),
-                dcc.Graph(
-                    id="rotation-timeline-chart",
-                    config={
-                        "displayModeBar": False,
-                        "responsive": True,
-                    },
-                ),
-            ],
-            className="panel rotation-chart-panel",
-        ),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.Div(
-                            "SUBSTITUTION LOG",
-                            className="section-eyebrow",
-                        ),
-                        html.H2(
-                            "Recorded Changes",
-                            className="section-title",
-                        ),
-                        html.Div(
-                            id="substitution-log",
-                        ),
-                    ],
-                    className="panel substitution-panel",
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            "ROTATION READOUT",
-                            className="section-eyebrow",
-                        ),
-                        html.H2(
-                            "Operational Notes",
-                            className="section-title",
-                        ),
-                        html.Div(
-                            id="rotation-readout",
-                        ),
-                    ],
-                    className="panel insight-panel",
-                ),
-            ],
-            className="rotation-lower-grid",
-        ),
-    ],
-    className="page-content",
-)
+
+def layout():
+    return html.Div(
+        [
+            dcc.Store(id="game-link-selection", data={"instance": str(uuid4())}),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "ROTATION MANAGEMENT",
+                                className="eyebrow",
+                            ),
+                            html.H1(
+                                "Rotation Timeline",
+                                className="page-title",
+                            ),
+                            html.P(
+                                "Player stint timing, substitution patterns, "
+                                "and rotation depth across the full game.",
+                                className="page-subtitle",
+                            ),
+                        ]
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.Label(
+                                        "TEAM",
+                                        htmlFor="game-team-selector",
+                                        className="filter-label",
+                                    ),
+                                    dcc.Dropdown(
+                                        id="game-team-selector",
+                                        options=TEAM_OPTIONS,
+                                        value=DEFAULT_TEAM,
+                                        clearable=False,
+                                        maxHeight=360,
+                                    ),
+                                ],
+                                className="rotation-filter team",
+                            ),
+                            html.Div(
+                                [
+                                    html.Label(
+                                        "GAME",
+                                        htmlFor="game-selector",
+                                        className="filter-label",
+                                    ),
+                                    dcc.Dropdown(
+                                        id="game-selector",
+                                        options=DEFAULT_GAME_OPTIONS,
+                                        value=DEFAULT_GAME,
+                                        clearable=False,
+                                        maxHeight=360,
+                                    ),
+                                ],
+                                className="rotation-filter game",
+                            ),
+                        ],
+                        className="rotation-filter-row",
+                    ),
+                ],
+                className="page-header rotation-page-header",
+            ),
+            html.Div(
+                id="rotation-metrics",
+                className="metric-grid",
+            ),
+            html.Div(
+                [
+                    html.Div(
+                        "PLAYER STINTS",
+                        className="section-eyebrow",
+                    ),
+                    html.H2(
+                        "Full-Game Rotation Map",
+                        className="section-title",
+                    ),
+                    html.P(
+                        "Each bar represents one continuous player stint. "
+                        "Vertical markers show quarter and overtime starts. "
+                        "Green = positive, gray = even, red = negative team +/- during that stint. "
+                        "Hover for the exact margin; color intensity is scaled within this game.",
+                        className="section-description",
+                    ),
+                    dcc.Graph(
+                        id="rotation-timeline-chart",
+                        config={
+                            "displayModeBar": False,
+                            "responsive": True,
+                        },
+                    ),
+                ],
+                className="panel rotation-chart-panel",
+            ),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "SUBSTITUTION LOG",
+                                className="section-eyebrow",
+                            ),
+                            html.H2(
+                                "Recorded Changes",
+                                className="section-title",
+                            ),
+                            html.Div(
+                                id="substitution-log",
+                            ),
+                        ],
+                        className="panel substitution-panel",
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                "ROTATION READOUT",
+                                className="section-eyebrow",
+                            ),
+                            html.H2(
+                                "Operational Notes",
+                                className="section-title",
+                            ),
+                            html.Div(
+                                id="rotation-readout",
+                            ),
+                        ],
+                        className="panel insight-panel",
+                    ),
+                ],
+                className="rotation-lower-grid",
+            ),
+        ],
+        className="page-content",
+    )
 
 
 def update_rotation_games(

@@ -3,7 +3,7 @@
 import os
 
 import dash_bootstrap_components as dbc
-from dash import Dash, dcc, html, page_container
+from dash import Dash, Input, Output, callback, dcc, html, page_container
 from flask import Response, jsonify
 
 from rotation_lab.config import ASSETS_DIR
@@ -90,33 +90,39 @@ app.layout = html.Div(
                     [
                         dbc.NavLink(
                             "Executive Overview",
+                            id="nav-overview",
                             href="/",
-                            active="exact",
+                            active=False,
                         ),
                         dbc.NavLink(
                             "Game Review",
+                            id="nav-review",
                             href="/game-review",
-                            active="partial",
+                            active=False,
                         ),
                         dbc.NavLink(
                             "Rotation Timeline",
+                            id="nav-rotations",
                             href="/rotations",
-                            active="exact",
+                            active=False,
                         ),
                         dbc.NavLink(
                             "Recommendations",
+                            id="nav-recommendations",
                             href="/recommendations",
-                            active="exact",
+                            active=False,
                         ),
                         dbc.NavLink(
                             "Scenario Planner",
+                            id="nav-planner",
                             href="/scenario-planner",
-                            active="exact",
+                            active=False,
                         ),
                         dbc.NavLink(
                             "Lineup Explorer",
+                            id="nav-lineups",
                             href="/lineups",
-                            active="exact",
+                            active=False,
                         ),
                     ],
                     className="sidebar-nav",
@@ -159,6 +165,27 @@ app.layout = html.Div(
     ],
     className="application-shell",
 )
+
+
+@callback(
+    [
+        Output(f"nav-{name}", "active")
+        for name in ("overview", "review", "rotations", "recommendations", "planner", "lineups")
+    ],
+    Input("_pages_location", "pathname"),
+)
+def active_navigation(pathname):
+    """Track Dash page navigation consistently, including Safari history updates."""
+    path = (pathname or "/").rstrip("/") or "/"
+    return [
+        path == "/",
+        path == "/game-review" or path.startswith("/game-review/"),
+        path == "/rotations",
+        path == "/recommendations",
+        path == "/scenario-planner",
+        path == "/lineups",
+    ]
+
 
 if __name__ == "__main__":
     app.run(

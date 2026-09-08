@@ -59,6 +59,17 @@ def test_evidence_floor_filters_before_limit_for_both_teams():
     assert any(row.total_minutes > 500 for row in get_evidence_recommendations("NYK"))
 
 
+def test_new_page_mount_restores_even_when_dropdown_is_reported_as_trigger():
+    games = get_team_games("NYK")
+    saved = {"team": "NYK", "game": games[1]["value"], "instance": "previous-page"}
+    context = {"instance": "new-page", "selection": None}
+    result = resolve_selection("NYK", games[0]["value"], saved, context, "game-selector")
+    assert result[2] == games[1]["value"]
+    assert result[0]["instance"] == "new-page"
+    updated = resolve_selection("NYK", games[0]["value"], result[0], context, "game-selector")
+    assert updated[2] == games[0]["value"]
+
+
 def test_stint_colors_use_margins_and_show_exact_values():
     figure = build_rotation_figure(
         [
@@ -89,3 +100,15 @@ def test_asset_routes_return_images():
         assert response.mimetype == "image/png"
         assert response.data.startswith(b"\x89PNG")
     assert Path(config.ASSETS_DIR).is_dir()
+
+
+def test_navigation_highlights_exactly_one_page_and_game_deep_links():
+    assert app.active_navigation("/game-review/NYK/0022501190") == [
+        False,
+        True,
+        False,
+        False,
+        False,
+        False,
+    ]
+    assert app.active_navigation("/scenario-planner") == [False, False, False, False, True, False]

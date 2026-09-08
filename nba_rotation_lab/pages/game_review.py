@@ -2,6 +2,7 @@
 
 from base64 import b64encode
 from typing import Any
+from uuid import uuid4
 
 import plotly.graph_objects as go
 from dash import (
@@ -66,7 +67,12 @@ def layout(
         [
             dcc.Store(
                 id="game-link-selection",
-                data={"team": selected_team, "game": selected_game} if team and game_id else None,
+                data={
+                    "instance": str(uuid4()),
+                    "selection": {"team": selected_team, "game": selected_game}
+                    if team and game_id
+                    else None,
+                },
             ),
             html.Div(
                 [

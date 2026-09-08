@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 from dash import (
     Input,
     Output,
-    State,
     callback,
     dcc,
     html,
@@ -32,24 +31,6 @@ register_page(
     title="Rotation Timeline | NBA Rotation Lab",
 )
 
-PLAYER_COLORS = [
-    "#2366d1",
-    "#f27a2b",
-    "#16855b",
-    "#8b5cf6",
-    "#d946a8",
-    "#0f9ca8",
-    "#c5424d",
-    "#7a8b43",
-    "#4062a8",
-    "#bd6b22",
-    "#53657d",
-    "#7c4d9f",
-    "#28836f",
-    "#a75962",
-    "#4b78a8",
-]
-
 TEAM_OPTIONS = get_dashboard_teams()
 TEAM_VALUES = [option["value"] for option in TEAM_OPTIONS]
 DEFAULT_TEAM = "NYK" if "NYK" in TEAM_VALUES else TEAM_VALUES[0] if TEAM_VALUES else None
@@ -58,6 +39,7 @@ DEFAULT_GAME = DEFAULT_GAME_OPTIONS[0]["value"] if DEFAULT_GAME_OPTIONS else Non
 
 layout = html.Div(
     [
+        dcc.Store(id="game-link-selection"),
         html.Div(
             [
                 html.Div(
@@ -83,11 +65,11 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "TEAM",
-                                    htmlFor="rotation-team-selector",
+                                    htmlFor="game-team-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
-                                    id="rotation-team-selector",
+                                    id="game-team-selector",
                                     options=TEAM_OPTIONS,
                                     value=DEFAULT_TEAM,
                                     clearable=False,
@@ -100,11 +82,11 @@ layout = html.Div(
                             [
                                 html.Label(
                                     "GAME",
-                                    htmlFor="rotation-game-selector",
+                                    htmlFor="game-selector",
                                     className="filter-label",
                                 ),
                                 dcc.Dropdown(
-                                    id="rotation-game-selector",
+                                    id="game-selector",
                                     options=DEFAULT_GAME_OPTIONS,
                                     value=DEFAULT_GAME,
                                     clearable=False,
@@ -135,7 +117,9 @@ layout = html.Div(
                 ),
                 html.P(
                     "Each bar represents one continuous player stint. "
-                    "Vertical markers show quarter and overtime starts.",
+                    "Vertical markers show quarter and overtime starts. "
+                    "Green = positive, gray = even, red = negative team +/- during that stint. "
+                    "Hover for the exact margin; color intensity is scaled within this game.",
                     className="section-description",
                 ),
                 dcc.Graph(
@@ -190,12 +174,6 @@ layout = html.Div(
 )
 
 
-@callback(
-    Output("rotation-game-selector", "options"),
-    Output("rotation-game-selector", "value"),
-    Input("rotation-team-selector", "value"),
-    State("rotation-game-selector", "value"),
-)
 def update_rotation_games(
     team_abbreviation: str | None,
     current_game_id: str | None,
@@ -224,8 +202,8 @@ def update_rotation_games(
     Output("rotation-timeline-chart", "figure"),
     Output("substitution-log", "children"),
     Output("rotation-readout", "children"),
-    Input("rotation-team-selector", "value"),
-    Input("rotation-game-selector", "value"),
+    Input("game-team-selector", "value"),
+    Input("game-selector", "value"),
 )
 def update_rotation_timeline(
     team_abbreviation: str | None,
@@ -315,11 +293,8 @@ def build_rotation_figure(
         )
     ]
 
-    player_ids = sorted({int(stint[0]) for stint in stints})
-    color_map = {
-        player_id: PLAYER_COLORS[color_number % len(PLAYER_COLORS)]
-        for color_number, player_id in enumerate(player_ids)
-    }
+    margins = [int(stint[6]) if len(stint) > 6 else 0 for stint in stints]
+    scale_limit = max(5, max((abs(value) for value in margins), default=0))
 
     figure = go.Figure()
 
@@ -331,17 +306,28 @@ def build_rotation_figure(
             base=[float(stint[3]) / 60 for stint in stints],
             orientation="h",
             marker={
-                "color": [color_map[int(stint[0])] for stint in stints],
+                "color": margins,
+                "colorscale": [[0, "#b74754"], [0.5, "#d3d9e1"], [1, "#16855b"]],
+                "cmin": -scale_limit,
+                "cmax": scale_limit,
+                "showscale": False,
                 "line": {"color": "#ffffff", "width": 1},
             },
             customdata=[
-                [int(stint[2]), float(stint[3]) / 60, float(stint[4]) / 60, float(stint[5]) / 60]
+                [
+                    int(stint[2]),
+                    float(stint[3]) / 60,
+                    float(stint[4]) / 60,
+                    float(stint[5]) / 60,
+                    int(stint[6]) if len(stint) > 6 else 0,
+                ]
                 for stint in stints
             ],
             hovertemplate=(
                 "<b>%{y}</b><br>Stint %{customdata[0]}<br>"
                 "Game minute: %{customdata[1]:.2f}-%{customdata[2]:.2f}<br>"
-                "Duration: %{customdata[3]:.2f} min<extra></extra>"
+                "Duration: %{customdata[3]:.2f} min<br>Team +/- during stint: "
+                "%{customdata[4]:+d}<extra></extra>"
             ),
             showlegend=False,
         )

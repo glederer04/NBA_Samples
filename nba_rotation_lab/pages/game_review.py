@@ -7,7 +7,6 @@ import plotly.graph_objects as go
 from dash import (
     Input,
     Output,
-    State,
     callback,
     dcc,
     html,
@@ -65,6 +64,10 @@ def layout(
 
     return html.Div(
         [
+            dcc.Store(
+                id="game-link-selection",
+                data={"team": selected_team, "game": selected_game} if team and game_id else None,
+            ),
             html.Div(
                 [
                     html.Div(
@@ -90,11 +93,11 @@ def layout(
                                 [
                                     html.Label(
                                         "TEAM",
-                                        htmlFor="review-team-selector",
+                                        htmlFor="game-team-selector",
                                         className="filter-label",
                                     ),
                                     dcc.Dropdown(
-                                        id="review-team-selector",
+                                        id="game-team-selector",
                                         options=team_options,
                                         value=selected_team,
                                         clearable=False,
@@ -107,11 +110,11 @@ def layout(
                                 [
                                     html.Label(
                                         "GAME",
-                                        htmlFor="review-game-selector",
+                                        htmlFor="game-selector",
                                         className="filter-label",
                                     ),
                                     dcc.Dropdown(
-                                        id="review-game-selector",
+                                        id="game-selector",
                                         options=game_options,
                                         value=selected_game,
                                         clearable=False,
@@ -239,12 +242,6 @@ def layout(
     )
 
 
-@callback(
-    Output("review-game-selector", "options"),
-    Output("review-game-selector", "value"),
-    Input("review-team-selector", "value"),
-    State("review-game-selector", "value"),
-)
 def update_game_options(
     team_abbreviation: str | None,
     current_game_id: str | None,
@@ -303,8 +300,8 @@ def download_game_report(
     Output("game-takeaways", "children"),
     Output("rotation-stretches", "children"),
     Output("game-lineups", "children"),
-    Input("review-team-selector", "value"),
-    Input("review-game-selector", "value"),
+    Input("game-team-selector", "value"),
+    Input("game-selector", "value"),
 )
 def update_game_review(
     team_abbreviation: str | None,
@@ -659,8 +656,8 @@ def empty_game_review() -> tuple:
     Output("download-game-report-button", "href"),
     Output("preview-game-report", "href"),
     Output("game-report-status", "children"),
-    Input("review-team-selector", "value"),
-    Input("review-game-selector", "value"),
+    Input("game-team-selector", "value"),
+    Input("game-selector", "value"),
 )
 def game_report_links(team: str | None, game_id: str | None) -> tuple:
     """Expose a normal browser download and a separately accessible preview."""

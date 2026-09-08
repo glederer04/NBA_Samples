@@ -208,3 +208,5 @@ For a fresh checkout, use the included sample database with `ROTATION_LAB_DATABA
 The [September 2026 quality review](docs/quality-review-2026-09.md) documents responsive layout fixes, bundled team logos, query caching, rotation-chart optimization, and improved PDF generation. Game PDFs include every qualifying stretch returned by the existing query and can span more than two pages; scenario reports retain their two-page design.
 
 The [follow-up review](docs/quality-review-followup-2026-09.md) covers normalized dropdown logos, browser-native PDF downloads and previews, compact lineup names, corrected numeric filtering, reordered navigation, verification timings, and suggested next improvements.
+
+The [September 8 portfolio follow-up](docs/quality-review-2026-09-08.md) explains the deployment asset-path fix, shared game selection, evidence-based recommendation views, stint +/- colors, and boundary scoring. The [player analysis and planning roadmap](docs/player-analysis-and-planning-roadmap.md) specifies proposed on/off, trio, and player-minute-range planning features; these remain future work.

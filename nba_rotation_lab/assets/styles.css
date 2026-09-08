@@ -1220,3 +1220,5 @@ body {
 #complete-lineup-table .dash-filter input[type="text"] { width: 100% !important; min-width: 0; flex: 1 1 auto; }
 #complete-lineup-table .dash-filter input[type="button"] { width: 25px !important; flex: 0 0 25px; padding: 3px !important; margin: 0; }
 #complete-lineup-table .dash-filter:not([data-dash-column="lineup"]):not([data-dash-column="sample"]) input[type="button"] { display: none; }
+
+.recommendation-evidence-filter { max-width: 440px; margin: 0 0 24px; }

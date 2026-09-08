@@ -15,10 +15,10 @@ from rotation_lab.dashboard.components import (
     player_headshot,
 )
 from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
+from rotation_lab.dashboard.data import get_evidence_recommendations
 from rotation_lab.recommendations import (
     LineupRecommendation,
     describe_lineup_recommendation,
-    get_lineup_recommendations,
 )
 
 register_page(
@@ -86,14 +86,35 @@ def layout() -> html.Div:
                         className="section-eyebrow",
                     ),
                     html.P(
-                        "Raw lineup performance is shrunk toward the "
-                        "team baseline according to minutes played. "
-                        "Small samples receive lower confidence and "
-                        "more conservative recommendations.",
+                        "The default view requires at least 100 minutes across 10 games. "
+                        "Qualifying units are ranked by sample-adjusted margin, not overall "
+                        "talent. "
+                        "The sample weight is minutes / (minutes + 48); it is not a probability "
+                        "that a lineup will succeed. Smaller-sample views are for exploration.",
                         className="recommendation-methodology",
                     ),
                 ],
                 className="recommendation-explainer",
+            ),
+            html.Div(
+                [
+                    html.Label(
+                        "EVIDENCE FLOOR",
+                        htmlFor="recommendation-evidence",
+                        className="filter-label",
+                    ),
+                    dcc.Dropdown(
+                        id="recommendation-evidence",
+                        options=[
+                            {"label": "Established · 100+ min / 10+ games", "value": "established"},
+                            {"label": "Developing · 30+ min / 5+ games", "value": "developing"},
+                            {"label": "Exploratory · all units with 5+ min", "value": "all"},
+                        ],
+                        value="established",
+                        clearable=False,
+                    ),
+                ],
+                className="recommendation-evidence-filter",
             ),
             html.Div(
                 id="recommendation-metrics",
@@ -125,22 +146,27 @@ def layout() -> html.Div:
     Output("recommendation-metrics", "children"),
     Output("recommendation-list", "children"),
     Input("recommendation-team-selector", "value"),
+    Input("recommendation-evidence", "value"),
 )
 def update_recommendations(
     team_abbreviation: str | None,
+    evidence: str = "established",
 ) -> tuple[list[html.Div], list[html.Div]]:
     """Update recommendation metrics and ranked units."""
 
     if team_abbreviation is None:
         return [], [empty_recommendation_message()]
 
-    recommendations = get_lineup_recommendations(
-        team_abbreviation,
-        limit=10,
-    )
+    recommendations = get_evidence_recommendations(team_abbreviation, evidence)
 
     if not recommendations:
-        return [], [empty_recommendation_message()]
+        return [], [
+            html.Div(
+                "No units meet this evidence floor. Choose Developing or Exploratory to "
+                "inspect smaller samples.",
+                className="empty-state",
+            )
+        ]
 
     priority_count = sum(
         recommendation.recommendation == "prioritize" for recommendation in recommendations
@@ -169,9 +195,9 @@ def update_recommendations(
             detail="Require a larger sample",
         ),
         metric_card(
-            label="TOP CONFIDENCE",
+            label="TOP SAMPLE WEIGHT",
             value=f"{highest_confidence:.1f}%",
-            detail="Minutes-based confidence score",
+            detail="Shrinkage weight, not win probability",
         ),
     ]
 
@@ -248,14 +274,16 @@ def recommendation_card(
                         value=format_signed(recommendation.team_plus_minus_per_48),
                     ),
                     recommendation_stat(
-                        label="CONFIDENCE",
+                        label="SAMPLE WEIGHT",
                         value=(f"{recommendation.confidence_percentage:.1f}%"),
                     ),
                 ],
                 className="recommendation-stats",
             ),
             html.P(
-                describe_lineup_recommendation(recommendation),
+                describe_lineup_recommendation(recommendation).replace(
+                    "confidence score", "sample weight"
+                ),
                 className="recommendation-explanation",
             ),
             html.Div(

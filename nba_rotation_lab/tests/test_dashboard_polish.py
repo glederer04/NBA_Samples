@@ -43,7 +43,7 @@ def test_rotation_trace_preserves_every_stint_and_tooltip() -> None:
     assert list(figure.data[0].x) == [2, 3, 2]
     assert list(figure.data[0].base) == [0, 0, 4]
     assert list(figure.data[0].y) == ["Player A", "Player B", "Player A"]
-    assert list(figure.data[0].customdata[-1]) == [2, 4, 6, 2]
+    assert list(figure.data[0].customdata[-1]) == [2, 4, 6, 2, 0]
     assert "No player stints" in rotations.build_rotation_readout({"stints": []}).children
 
 

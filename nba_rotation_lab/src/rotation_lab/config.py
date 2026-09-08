@@ -3,7 +3,20 @@
 import os
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+def resolve_project_root() -> Path:
+    """Find application resources in both editable and wheel-based deployments."""
+    override = os.getenv("ROTATION_LAB_PROJECT_ROOT")
+    if override:
+        return Path(override).expanduser().resolve()
+    source_root = Path(__file__).resolve().parents[2]
+    for candidate in (source_root, Path.cwd()):
+        if (candidate / "app.py").is_file() and (candidate / "assets").is_dir():
+            return candidate.resolve()
+    return source_root
+
+
+PROJECT_ROOT = resolve_project_root()
 
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"

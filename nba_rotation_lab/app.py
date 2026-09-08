@@ -3,9 +3,11 @@
 import os
 
 import dash_bootstrap_components as dbc
-from dash import Dash, html, page_container
+from dash import Dash, dcc, html, page_container
 from flask import Response, jsonify
 
+from rotation_lab.config import ASSETS_DIR
+from rotation_lab.dashboard import game_selection  # noqa: F401
 from rotation_lab.database import connect_database
 from rotation_lab.reporting.downloads import reports
 
@@ -13,6 +15,7 @@ app = Dash(
     __name__,
     use_pages=True,
     pages_folder="pages",
+    assets_folder=str(ASSETS_DIR),
     external_stylesheets=[
         dbc.themes.BOOTSTRAP,
     ],
@@ -59,6 +62,7 @@ def health_check() -> tuple[Response, int]:
 
 app.layout = html.Div(
     [
+        dcc.Store(id="shared-game-selection", storage_type="session"),
         html.Aside(
             [
                 html.Div(

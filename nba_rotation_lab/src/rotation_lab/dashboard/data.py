@@ -542,25 +542,21 @@ def get_rotation_timeline(
         stints = connection.execute(
             """
             SELECT
-                player_id,
-                player_name,
-                stint_number,
-                in_time_seconds,
-                out_time_seconds,
-                duration_seconds
-            FROM raw.rotation_stints
-            WHERE
-                game_id = ?
-                AND team_id = ?
-            ORDER BY
-                player_name,
-                in_time_seconds,
-                stint_number
+                stint.player_id, stint.player_name, stint.stint_number,
+                stint.in_time_seconds, stint.out_time_seconds, stint.duration_seconds,
+                COALESCE(SUM(CASE WHEN ? = 'home'
+                    THEN score.home_points - score.away_points
+                    ELSE score.away_points - score.home_points END), 0) AS plus_minus
+            FROM raw.rotation_stints AS stint
+            LEFT JOIN staging.scoring_events AS score
+                ON score.game_id = stint.game_id
+                AND score.game_elapsed_deciseconds > ROUND(stint.in_time_seconds * 10)
+                AND score.game_elapsed_deciseconds <= ROUND(stint.out_time_seconds * 10)
+            WHERE stint.game_id = ? AND stint.team_id = ?
+            GROUP BY ALL
+            ORDER BY stint.player_name, stint.in_time_seconds, stint.stint_number
             """,
-            [
-                game_id,
-                team_id,
-            ],
+            [summary[3], game_id, team_id],
         ).fetchall()
 
         substitutions = connection.execute(
@@ -620,3 +616,34 @@ def get_planner_recommendations(team_abbreviation: str, *, limit: int = 50) -> l
     from rotation_lab.recommendations import get_lineup_recommendations
 
     return get_lineup_recommendations(team_abbreviation, limit=limit, database_path=DATABASE_PATH)
+
+
+@database_cached(lambda: DATABASE_PATH)
+def get_evidence_recommendations(team: str, evidence: str = "established") -> list:
+    """Filter the entire pool before ranking; preserve existing model estimates."""
+    from dataclasses import replace
+
+    from rotation_lab.recommendations import get_lineup_recommendations
+
+    minutes, games = {"established": (100, 10), "developing": (30, 5), "all": (5, 1)}.get(
+        evidence, (100, 10)
+    )
+    rows = get_lineup_recommendations(
+        team,
+        limit=10,
+        database_path=DATABASE_PATH,
+        minimum_minutes=minutes,
+        minimum_games=games,
+    )
+    return [
+        replace(
+            row,
+            recommendation_rank=index,
+            recommendation=(
+                row.recommendation
+                if row.total_minutes >= 100 and row.games_used >= 10
+                else "exploratory"
+            ),
+        )
+        for index, row in enumerate(rows, 1)
+    ]

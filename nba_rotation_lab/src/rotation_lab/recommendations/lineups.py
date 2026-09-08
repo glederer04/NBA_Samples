@@ -49,6 +49,8 @@ def get_lineup_recommendations(
     *,
     limit: int = 5,
     database_path: Path = DATABASE_PATH,
+    minimum_minutes: float = 0,
+    minimum_games: int = 0,
 ) -> list[LineupRecommendation]:
     """Return the highest-ranked recommendations for one team."""
 
@@ -83,11 +85,15 @@ def get_lineup_recommendations(
                 latest_game_date
             FROM marts.lineup_recommendation_pool
             WHERE team_abbreviation = ?
+                AND total_minutes >= ?
+                AND games_used >= ?
             ORDER BY recommendation_rank
             LIMIT ?
             """,
             [
                 normalized_team,
+                minimum_minutes,
+                minimum_games,
                 limit,
             ],
         ).fetchall()

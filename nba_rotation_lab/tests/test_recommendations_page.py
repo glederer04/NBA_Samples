@@ -46,7 +46,7 @@ def test_recommendation_card_contains_decision_support() -> None:
     assert card_properties["className"] == ("recommendation-card recommendation-card-prioritize")
     assert "PRIORITIZE" in rendered_card
     assert "ADJUSTED +/- 48" in rendered_card
-    assert "CONFIDENCE" in rendered_card
+    assert "SAMPLE WEIGHT" in rendered_card
     assert "Player One" in rendered_card
     assert "decision support" in rendered_card
     assert "Updated 2026-01-15" in rendered_card
@@ -61,16 +61,15 @@ def test_update_recommendations_builds_metrics_and_cards(
 
     def fake_get_lineup_recommendations(
         team_abbreviation: str,
-        *,
-        limit: int,
+        evidence: str,
     ) -> list[LineupRecommendation]:
         assert team_abbreviation == "NYK"
-        assert limit == 10
+        assert evidence == "established"
         return [recommendation]
 
     monkeypatch.setattr(
         recommendation_page,
-        "get_lineup_recommendations",
+        "get_evidence_recommendations",
         fake_get_lineup_recommendations,
     )
 

@@ -1222,3 +1222,68 @@ body {
 #complete-lineup-table .dash-filter:not([data-dash-column="lineup"]):not([data-dash-column="sample"]) input[type="button"] { display: none; }
 
 .recommendation-evidence-filter { max-width: 440px; margin: 0 0 24px; }
+
+/* Player Impact: restrained comparison colors and readable numeric alignment. */
+.impact-filters { display: grid; grid-template-columns: 140px 1fr 1.25fr; gap: 18px; }
+.impact-filters > :last-child { grid-column: 1 / -1; }
+.impact-options { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.impact-options > :last-child { grid-column: 1 / -1; }
+.impact-filters > *, .impact-options > *, .impact-hero > *, .impact-compare-grid > * { min-width: 0; }
+.impact-note { color: #53657a; font-size: 13px; line-height: 1.65; margin: 12px 0; }
+.impact-sample { color: #314b64; font-size: 13px; font-weight: 650; margin: 16px 0; }
+.impact-hero { display: grid; grid-template-columns: minmax(170px, .7fr) minmax(0, 1.3fr); align-items: center; gap: 24px; }
+.impact-swing { font-size: 48px; font-weight: 750; letter-spacing: -2px; color: #183956; }
+.impact-table-scroll { overflow-x: auto; margin: 16px 0; border: 1px solid #dee6ef; border-radius: 8px; }
+.impact-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.impact-table th { background: #edf3f8; color: #334b62; font-size: 12px; font-weight: 700; }
+.impact-table th, .impact-table td { padding: 12px 14px; text-align: right; vertical-align: middle; border-bottom: 1px solid #e6edf3; }
+.impact-table th:first-child, .impact-table td:first-child { text-align: left; min-width: 145px; }
+.impact-table tbody tr:last-child td { border-bottom: none; }
+.impact-table tbody tr:nth-child(even) { background: #f8fafc; }
+.impact-table a { color: #175b94; font-weight: 600; text-decoration: none; }
+.impact-table a:hover, .player-headshot-name:hover { text-decoration: underline; }
+.impact-method summary { color: #28435e; font-weight: 650; cursor: pointer; padding: 6px 0; }
+.impact-method p { line-height: 1.7; font-size: 13px; color: #53657a; margin: 16px 0; }
+.impact-method .dash-checklist { margin-top: 16px; font-size: 13px; }
+.impact-compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 24px; }
+.impact-compare-grid .impact-table { font-size: 12px; }
+.impact-compare-grid .impact-table th, .impact-compare-grid .impact-table td { padding: 10px 8px; }
+.impact-subtitle { font-size: 17px; color: #263e56; margin: 22px 0 10px; font-weight: 700; }
+.player-headshot-name { text-decoration: none; color: inherit; display: block; }
+#impact-compare { max-width: 450px; }
+.impact-match-card { margin-top: 28px; border: 1px solid #dce5ee; border-radius: 14px; padding: 24px; background: linear-gradient(180deg, #f4f8fc, #fff 260px); }
+.impact-match-header, .impact-match-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .85fr) minmax(0, 1fr); align-items: center; gap: 12px; }
+.impact-contender { text-align: center; min-width: 0; }
+.impact-contender h3 { font-size: 18px; font-weight: 750; color: #243d56; margin: 14px 0 6px; }
+.impact-contender .impact-note { font-size: 12px; margin: 0; }
+.impact-portrait { width: 132px; height: 112px; overflow: hidden; margin: auto; border-radius: 12px; background: #e5edf5; border: 1px solid #d7e2ed; }
+.impact-portrait .player-headshot-image { width: 100%; height: 100%; object-fit: contain; }
+.impact-versus { text-align: center; letter-spacing: 2px; font-size: 12px; font-weight: 750; color: #8291a2; }
+.impact-match-group h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 750; color: #3e607e; border-bottom: 2px solid #dce6ef; padding-bottom: 12px; margin: 28px 0 0; }
+.impact-match-row { padding: 18px 0 12px; border-bottom: 1px solid #e7edf3; }
+.impact-value { display: flex; flex-direction: column; align-items: center; min-height: 60px; gap: 6px; font-variant-numeric: tabular-nums; }
+.impact-value strong { font-size: 27px; font-weight: 750; color: #243d56; }
+.impact-edge { border-radius: 12px; background: #e0f1ea; color: #17604c; padding: 3px 9px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.impact-metric { text-align: center; }
+.impact-metric-name { color: #2e4359; font-size: 13px; font-weight: 700; }
+.impact-metric small, .impact-gap-note { font-size: 11px; color: #62758a; }
+.impact-gap-note { margin-top: 6px; }
+.impact-gap-interval { grid-column: 1 / -1; text-align: center; color: #65788c; font-size: 11px; font-variant-numeric: tabular-nums; }
+.impact-filters .DateInput_input { font-size: 14px; padding: 10px; }
+@media (max-width: 1000px) { .impact-compare-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+    .impact-filters, .impact-options, .impact-hero { grid-template-columns: 1fr; }
+    .impact-filters > :last-child, .impact-options > :last-child { grid-column: auto; }
+    .impact-swing { font-size: 40px; }
+    .impact-table { min-width: 530px; }
+    .impact-filters .DateInput { width: 115px; }
+    .impact-filters .DateInput_input { font-size: 12px; }
+    .impact-match-card { padding: 12px; margin-left: -6px; margin-right: -6px; }
+    .impact-match-header { grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); gap: 6px; }
+    .impact-match-row { grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1fr); gap: 5px; }
+    .impact-portrait { width: 94px; height: 82px; max-width: 100%; }
+    .impact-contender h3 { font-size: 14px; }
+    .impact-value strong { font-size: 23px; }
+    .impact-edge { font-size: 10px; padding: 3px 5px; }
+    .impact-metric-name { font-size: 12px; }
+}

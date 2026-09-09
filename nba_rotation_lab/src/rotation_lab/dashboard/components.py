@@ -1,6 +1,6 @@
 """Reusable Dash presentation components."""
 
-from dash import html
+from dash import dcc, html
 
 from rotation_lab.reporting.assets import player_headshot_url
 
@@ -131,6 +131,7 @@ def metric_card(
 def player_headshot(
     player_id: int,
     player_name: str,
+    team_abbreviation: str | None = None,
 ) -> html.Div:
     """Create one compact player headshot."""
 
@@ -145,9 +146,12 @@ def player_headshot(
                 ),
                 className="player-headshot-frame",
             ),
-            html.Div(
+            dcc.Link(
                 player_name,
+                href=f"/player-impact?player={player_id}"
+                + (f"&team={team_abbreviation}" if team_abbreviation else ""),
                 className="player-headshot-name",
+                title=f"View {player_name} on/off analysis",
             ),
         ],
         className="player-headshot",
@@ -164,6 +168,7 @@ def lineup_card(
     plus_minus: int,
     plus_minus_per_48: float,
     sample_size_status: str,
+    team_abbreviation: str | None = None,
 ) -> html.Div:
     """Create a five-player lineup performance card."""
 
@@ -200,6 +205,7 @@ def lineup_card(
                             player_headshot(
                                 player_id=player_id,
                                 player_name=player_name,
+                                team_abbreviation=team_abbreviation,
                             )
                             for player_id, player_name in players
                         ],

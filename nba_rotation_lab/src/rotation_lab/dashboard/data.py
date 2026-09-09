@@ -23,6 +23,7 @@ def get_dashboard_teams() -> list[dict[str, str]]:
             FROM marts.team_game_review AS reviews
             INNER JOIN raw.teams AS featured_teams
                 ON reviews.team_abbreviation = featured_teams.abbreviation
+            WHERE reviews.team_abbreviation IN ('NYK', 'SAS')
             ORDER BY reviews.team_abbreviation
             """
         ).fetchall()

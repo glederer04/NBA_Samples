@@ -251,6 +251,7 @@ def recommendation_card(
                             player_headshot(
                                 player_id=player_id,
                                 player_name=player_name,
+                                team_abbreviation=recommendation.team_abbreviation,
                             )
                             for player_id, player_name in players
                         ],

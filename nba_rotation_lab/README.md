@@ -30,6 +30,20 @@ This project demonstrates the complete analytics workflow required to answer tho
 
 ## Application Pages
 
+The application focuses on the **New York Knicks and San Antonio Spurs**. Opponent data
+is retained to analyze their games; other teams are not selectable analysis subjects.
+
+### Player Impact
+
+Compare team performance during a player's minutes and rest, with appearance-game/date
+filters, coverage checks, game-level uncertainty and teammate/opponent context. A portrait
+comparison card aligns two players' metrics and shows favorable observed differences on a
+shared schedule. Game Review includes a single-game on/off table, and player-card names link
+to season context. Rates are per 48 minutes, not possession net ratings or causal impact.
+
+See [Player Impact release notes](docs/player-impact-release.md) for calculations,
+validation, limitations and the deliberately deferred roadmap items.
+
 ### Executive Overview
 
 Summarizes team record, cumulative margin, lineup usage, rotation changes, data validation, recent games, and most-used units.

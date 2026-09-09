@@ -27,6 +27,7 @@ from rotation_lab.dashboard.data import (
     get_game_review,
     get_team_games,
 )
+from rotation_lab.dashboard.impact_components import game_impact
 from rotation_lab.reporting import generate_game_report_bytes
 
 register_page(
@@ -243,9 +244,26 @@ def layout(
                 ],
                 className="panel game-lineup-panel",
             ),
+            html.Div(
+                [
+                    html.Div("PLAYER CONTEXT", className="section-eyebrow"),
+                    html.H2("Player on/off in this game", className="section-title"),
+                    dcc.Loading(html.Div(id="game-player-impact"), delay_show=200),
+                ],
+                className="panel",
+            ),
         ],
         className="page-content",
     )
+
+
+@callback(
+    Output("game-player-impact", "children"),
+    Input("game-team-selector", "value"),
+    Input("game-selector", "value"),
+)
+def update_game_player_impact(team, game_id):
+    return game_impact(team, game_id)
 
 
 def update_game_options(
@@ -371,6 +389,7 @@ def update_game_review(
             plus_minus=int(row[5]),
             plus_minus_per_48=float(row[6]),
             sample_size_status="single game",
+            team_abbreviation=team_abbreviation,
         )
         for row in data["lineups"]
     ]

@@ -266,6 +266,7 @@ def update_lineup_explorer(
             plus_minus=int(row[7]),
             plus_minus_per_48=float(row[8]),
             sample_size_status=str(row[12]),
+            team_abbreviation=team_abbreviation,
         )
         for row in rows[:3]
     ]

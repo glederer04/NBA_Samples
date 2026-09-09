@@ -110,5 +110,23 @@ def test_navigation_highlights_exactly_one_page_and_game_deep_links():
         False,
         False,
         False,
+        False,
     ]
-    assert app.active_navigation("/scenario-planner") == [False, False, False, False, True, False]
+    assert app.active_navigation("/scenario-planner") == [
+        False,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+    ]
+    assert app.active_navigation("/player-impact") == [
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        True,
+    ]

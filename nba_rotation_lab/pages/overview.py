@@ -211,6 +211,7 @@ def update_overview(
             plus_minus=int(row[6]),
             plus_minus_per_48=float(row[7]),
             sample_size_status=str(row[8]),
+            team_abbreviation=team_abbreviation,
         )
         for row in data["top_lineups"]
     ]

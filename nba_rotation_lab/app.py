@@ -8,8 +8,11 @@ from flask import Response, jsonify
 
 from rotation_lab.config import ASSETS_DIR
 from rotation_lab.dashboard import game_selection  # noqa: F401
+from rotation_lab.dashboard.impact import initialize_impact_views
 from rotation_lab.database import connect_database
 from rotation_lab.reporting.downloads import reports
+
+initialize_impact_views()
 
 app = Dash(
     __name__,
@@ -107,6 +110,18 @@ app.layout = html.Div(
                             active=False,
                         ),
                         dbc.NavLink(
+                            "Lineup Explorer",
+                            id="nav-lineups",
+                            href="/lineups",
+                            active=False,
+                        ),
+                        dbc.NavLink(
+                            "Player Impact",
+                            id="nav-impact",
+                            href="/player-impact",
+                            active=False,
+                        ),
+                        dbc.NavLink(
                             "Recommendations",
                             id="nav-recommendations",
                             href="/recommendations",
@@ -116,12 +131,6 @@ app.layout = html.Div(
                             "Scenario Planner",
                             id="nav-planner",
                             href="/scenario-planner",
-                            active=False,
-                        ),
-                        dbc.NavLink(
-                            "Lineup Explorer",
-                            id="nav-lineups",
-                            href="/lineups",
                             active=False,
                         ),
                     ],
@@ -170,7 +179,15 @@ app.layout = html.Div(
 @callback(
     [
         Output(f"nav-{name}", "active")
-        for name in ("overview", "review", "rotations", "recommendations", "planner", "lineups")
+        for name in (
+            "overview",
+            "review",
+            "rotations",
+            "recommendations",
+            "planner",
+            "lineups",
+            "impact",
+        )
     ],
     Input("_pages_location", "pathname"),
 )
@@ -184,6 +201,7 @@ def active_navigation(pathname):
         path == "/recommendations",
         path == "/scenario-planner",
         path == "/lineups",
+        path == "/player-impact",
     ]
 
 

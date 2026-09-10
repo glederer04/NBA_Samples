@@ -102,6 +102,12 @@ def track_pipeline_run(
 
     try:
         yield run
+        if pipeline_name.startswith("ingest_") and any(
+            name in pipeline_name for name in ("rotation", "play_by_play", "games")
+        ):
+            from rotation_lab.lineups.trios import refresh_trios
+
+            refresh_trios(database_path)
     except Exception as error:
         finish_pipeline_run(
             run=run,

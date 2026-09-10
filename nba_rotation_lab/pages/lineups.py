@@ -1,4 +1,6 @@
-"""Interactive five-player Lineup Explorer page."""
+"""Five-player lineups and three-player cores with separate evidence controls."""
+
+from copy import deepcopy
 
 from dash import (
     Input,
@@ -8,6 +10,7 @@ from dash import (
     dash_table,
     dcc,
     html,
+    no_update,
     register_page,
 )
 
@@ -21,6 +24,7 @@ from rotation_lab.dashboard.data import (
     get_lineup_explorer,
     get_team_players,
 )
+from rotation_lab.dashboard.trio_components import trio_layout
 
 register_page(
     __name__,
@@ -33,7 +37,7 @@ TEAM_OPTIONS = get_dashboard_teams()
 TEAM_VALUES = [option["value"] for option in TEAM_OPTIONS]
 DEFAULT_TEAM = "NYK" if "NYK" in TEAM_VALUES else TEAM_VALUES[0] if TEAM_VALUES else None
 
-layout = html.Div(
+_five_page = html.Div(
     [
         html.Div(
             [
@@ -48,8 +52,8 @@ layout = html.Div(
                             className="page-title",
                         ),
                         html.P(
-                            "Search five-player combinations, compare "
-                            "performance, and control for sample size.",
+                            "Explore five-player lineups and three-player cores, "
+                            "with playing-time and sample context.",
                             className="page-subtitle",
                         ),
                     ]
@@ -111,6 +115,7 @@ layout = html.Div(
                                 ),
                             ],
                             className="lineup-filter minutes",
+                            id="five-minutes-filter",
                         ),
                     ],
                     className="lineup-filter-row",
@@ -166,6 +171,56 @@ layout = html.Div(
 )
 
 
+def layout(unit=None, team=None, **kwargs):
+    children = deepcopy(_five_page.children)
+    if team in {"NYK", "SAS"}:
+
+        def select_team(component):
+            if getattr(component, "id", None) == "lineup-team-selector":
+                component.value = team
+            nested = getattr(component, "children", [])
+            for child in nested if isinstance(nested, list) else [nested]:
+                if hasattr(child, "children") or hasattr(child, "id"):
+                    select_team(child)
+
+        select_team(children[0])
+    return html.Div(
+        [
+            children[0],
+            html.Div(
+                [
+                    html.Label("UNIT SIZE", className="filter-label"),
+                    dcc.RadioItems(
+                        id="lineup-unit-size",
+                        options=[
+                            {"label": " Five players", "value": "5"},
+                            {"label": " Three players", "value": "3"},
+                        ],
+                        value="3" if unit == "3" else "5",
+                        inline=True,
+                        className="unit-size-control",
+                    ),
+                ],
+                className="panel unit-size-panel",
+            ),
+            html.Div(children[1:], id="five-unit-content"),
+            trio_layout(),
+        ],
+        className="page-content",
+    )
+
+
+@callback(
+    Output("five-unit-content", "style"),
+    Output("trio-unit-content", "style"),
+    Output("five-minutes-filter", "style"),
+    Input("lineup-unit-size", "value"),
+)
+def show_unit_size(unit):
+    hidden = {"display": "none"}
+    return (hidden, {}, hidden) if unit == "3" else ({}, hidden, {})
+
+
 @callback(
     Output("lineup-player-selector", "options"),
     Output("lineup-player-selector", "value"),
@@ -197,13 +252,18 @@ def update_player_options(
     Input("lineup-team-selector", "value"),
     Input("lineup-minimum-minutes", "value"),
     Input("lineup-player-selector", "value"),
+    Input("lineup-unit-size", "value"),
 )
 def update_lineup_explorer(
     team_abbreviation: str | None,
     minimum_minutes: float | None,
     selected_players: list[str] | None,
+    unit: str = "5",
 ) -> tuple:
     """Update matching lineup results."""
+
+    if unit != "5":
+        return (no_update,) * 3
 
     if team_abbreviation is None:
         return empty_lineup_results()

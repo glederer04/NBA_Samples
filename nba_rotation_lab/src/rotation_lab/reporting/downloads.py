@@ -9,6 +9,7 @@ from flask import Blueprint, Response, current_app, render_template_string, requ
 from rotation_lab.config import DATABASE_PATH
 from rotation_lab.dashboard.cache import database_cached
 from rotation_lab.dashboard.data import get_game_review, get_planner_recommendations
+from rotation_lab.dashboard.game_context import enrich_game_report
 from rotation_lab.modeling import LineupAllocation, project_rotation_plan
 from rotation_lab.reporting import generate_game_report_bytes, generate_scenario_report_bytes
 
@@ -42,7 +43,9 @@ def game_pdf(team: str, game_id: str) -> tuple[bytes, str]:
     data = get_game_review(team, game_id)
     if data is None:
         raise LookupError("This game is unavailable for the selected team.")
-    return generate_game_report_bytes(data=data), f"{team}_{game_id}_game_report.pdf"
+    return generate_game_report_bytes(
+        data=enrich_game_report(data)
+    ), f"{team}_{game_id}_game_report.pdf"
 
 
 @database_cached(lambda: DATABASE_PATH)

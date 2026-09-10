@@ -6,7 +6,6 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import dcc, html
 
-from rotation_lab.dashboard.impact import filter_sample, summarize, team_dataset
 from rotation_lab.reporting.assets import player_headshot_url
 
 METRICS = ["Margin / 48", "Team points / 48", "Opponent points / 48"]
@@ -105,7 +104,18 @@ def comparison_card(first, second, names):
                     className="impact-match-row",
                 )
             )
-        groups.append(html.Div([html.H4(label), *rows], className="impact-match-group"))
+        groups.append(
+            html.Div(
+                [
+                    html.Div(
+                        [html.Span(names[0]), html.Span(label), html.Span(names[1])],
+                        className="impact-column-labels",
+                    ),
+                    *rows,
+                ],
+                className="impact-match-group",
+            )
+        )
     return html.Div(
         [
             html.Div(
@@ -259,39 +269,57 @@ def coverage_note(meta):
 def game_impact(team, game_id):
     if not team or not game_id:
         return html.P("Select a game to see player on/off.")
-    dataset = team_dataset(team)
-    intervals, meta = filter_sample(dataset, [], universe="all", game_id=game_id)
-    if intervals.empty:
-        return html.P("On/off unavailable: this game has no fully validated scoring coverage.")
-    rows = []
-    for player in dataset["players"].itertuples():
-        result = summarize(intervals, player.player_id, bootstrap=False)
-        if result["totals"][0][0] <= 0:
-            continue
-        rows.append(
-            [
-                dcc.Link(
-                    player.player_name, href=f"/player-impact?team={team}&player={player.player_id}"
-                ),
-                number(result["totals"][0][0] / 60),
-                number(result["totals"][1][0] / 60),
-                number(result["rates"][0][0], True),
-                number(result["rates"][1][0], True),
-                number(result["swing"][0], True),
-            ]
-        )
+    from rotation_lab.dashboard.game_context import game_context
+
+    context = game_context(team, game_id)
+    if not context["players"]:
+        return html.P("Player and trio context unavailable: no fully validated scoring coverage.")
+    rows = [
+        [
+            dcc.Link(row["name"], href=f"/player-impact?team={team}&player={row['player']}"),
+            number(row["on_minutes"]),
+            number(row["off_minutes"]),
+            number(row["on"], True),
+            number(row["off"], True),
+            number(row["swing"], True),
+        ]
+        for row in context["players"]
+    ]
+    cores = [
+        [
+            row["names"].replace(" | ", " · "),
+            number(row["minutes"]),
+            f"{row['points_for']}–{row['points_against']}",
+            number(row["margin"], True),
+            f"{row['partners']} · {row['partner_minutes']:.1f} min",
+        ]
+        for row in context["trios"]
+    ]
     return html.Div(
         [
             html.P(
-                "What happened during playing and rest minutes in this game. "
+                "Team outcomes during playing and rest minutes, ordered by minutes played. "
                 "These small samples describe the game; they do not rank player quality. "
-                "A dash means no on- or off-court exposure.",
+                "A dash means no exposure.",
                 className="impact-note",
             ),
             table(
                 ["Player", "On min", "Off min", "On margin / 48", "Off margin / 48", "Swing / 48"],
                 rows,
             ),
-            coverage_note(meta),
+            html.H3("Three most-used cores", className="impact-subtitle"),
+            html.P(
+                "A core is three teammates sharing the floor; two other spots can change. "
+                "Listed by time together. These overlapping groups are not additive. "
+                "The last column shows the two players who completed the core most often.",
+                className="impact-note",
+            ),
+            table(["Trio", "Together min", "PF–PA", "+/−", "Most-used completion"], cores),
+            dcc.Link(
+                "Explore season trios →",
+                href=f"/lineups?unit=3&team={team}",
+                className="report-preview-link",
+            ),
+            coverage_note(context["coverage"]),
         ]
     )

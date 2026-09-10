@@ -1,6 +1,6 @@
 # Player analysis and rotation planning roadmap
 
-September 8, 2026. Section 1's time-based on/off analysis is now implemented; see [the release notes](player-impact-release.md) for the delivered scope, validation and limitations. Possession reconstruction and adjusted impact modeling remain future work. Sections 2 and 3 remain proposals. Keep the current three-lineup scenario tool available until a player-based replacement has been validated.
+September 8, 2026. Section 1's time-based on/off analysis is now implemented; see [the release notes](player-impact-release.md) for the delivered scope, validation and limitations. Possession reconstruction and adjusted impact modeling remain future work. Section 2 is now implemented in Lineup Explorer and Game Review/PDF; see [trio release notes and concrete planner next steps](trio-analysis-release.md). Section 3 remains a proposal. Keep the current three-lineup scenario tool available until a player-based replacement has been validated.
 
 ## 1. Player on/off analysis
 

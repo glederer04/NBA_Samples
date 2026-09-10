@@ -4,6 +4,9 @@ import argparse
 from pathlib import Path
 
 from rotation_lab.dashboard.data import get_game_review
+from rotation_lab.dashboard.game_context import enrich_game_report
+from rotation_lab.dashboard.impact import initialize_impact_views
+from rotation_lab.lineups.trios import refresh_trios
 from rotation_lab.reporting import generate_game_report
 
 
@@ -36,6 +39,8 @@ def main() -> None:
     """Generate the selected report."""
 
     args = parse_args()
+    initialize_impact_views()
+    refresh_trios()
 
     team_abbreviation = str(args.team).strip().upper()
     game_id = str(args.game_id).strip()
@@ -51,7 +56,7 @@ def main() -> None:
     output_path = args.output or Path(f"output/pdf/{team_abbreviation}_{game_id}_game_report.pdf")
 
     generated_path = generate_game_report(
-        data=data,
+        data=enrich_game_report(data),
         output_path=output_path,
     )
 

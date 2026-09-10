@@ -10,9 +10,11 @@ from rotation_lab.config import ASSETS_DIR
 from rotation_lab.dashboard import game_selection  # noqa: F401
 from rotation_lab.dashboard.impact import initialize_impact_views
 from rotation_lab.database import connect_database
+from rotation_lab.lineups.trios import refresh_trios
 from rotation_lab.reporting.downloads import reports
 
 initialize_impact_views()
+refresh_trios()
 
 app = Dash(
     __name__,

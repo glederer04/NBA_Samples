@@ -302,6 +302,9 @@ def build_demo_database(
             destination_path=temporary_path,
             featured_teams=featured_teams,
         )
+        from rotation_lab.lineups.trios import refresh_trios
+
+        refresh_trios(temporary_path)
         counts = _validate_demo_database(
             source_path=source_path,
             database_path=temporary_path,

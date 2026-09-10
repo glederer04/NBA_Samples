@@ -32,7 +32,7 @@ def test_download_game_report_returns_pdf_payload(
         *,
         data: dict[str, Any],
     ) -> bytes:
-        assert data == report_data
+        assert data == {**report_data, "player_context": {"players": [], "trios": []}}
         return b"%PDF-1.7\nmock report"
 
     monkeypatch.setattr(
@@ -44,6 +44,11 @@ def test_download_game_report_returns_pdf_payload(
         game_review,
         "generate_game_report_bytes",
         fake_generate_game_report_bytes,
+    )
+    monkeypatch.setattr(
+        game_review,
+        "enrich_game_report",
+        lambda data: {**data, "player_context": {"players": [], "trios": []}},
     )
 
     result = game_review.download_game_report(

@@ -27,6 +27,7 @@ from rotation_lab.dashboard.data import (
     get_game_review,
     get_team_games,
 )
+from rotation_lab.dashboard.game_context import enrich_game_report
 from rotation_lab.dashboard.impact_components import game_impact
 from rotation_lab.reporting import generate_game_report_bytes
 
@@ -307,7 +308,7 @@ def download_game_report(
     filename = f"{normalized_team}_{normalized_game_id}_game_report.pdf"
 
     pdf_bytes = generate_game_report_bytes(
-        data=data,
+        data=enrich_game_report(data),
     )
 
     return {
@@ -691,4 +692,8 @@ def game_report_links(team: str | None, game_id: str | None) -> tuple:
     from urllib.parse import quote
 
     url = f"/reports/game/{quote(team, safe='')}/{quote(game_id, safe='')}.pdf"
-    return url, url + "?view=1", "PDF · Game summary, lineups, and qualifying rotation stretches."
+    return (
+        url,
+        url + "?view=1",
+        "PDF · Game summary, rotation stretches, player on/off, and most-used cores.",
+    )

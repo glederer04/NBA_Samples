@@ -6,6 +6,7 @@ from datetime import date
 from functools import partial
 from html import escape
 from io import BytesIO
+from math import isfinite
 from pathlib import Path
 from typing import Any
 
@@ -281,6 +282,99 @@ def _build_story(
         ),
     ]
 
+    if "player_context" in data:
+        story.extend(_player_context_story(data["player_context"], styles))
+    return story
+
+
+def _player_context_story(context, styles):
+    """A dedicated, compact coaching page using the exact Game Review samples."""
+
+    def value(number, signed=False):
+        return (f"{number:+.1f}" if signed else f"{number:.1f}") if isfinite(number) else "-"
+
+    story = [
+        PageBreak(),
+        Paragraph("Player & Core Context", styles["title"]),
+        Paragraph(
+            "Playing time, rest minutes, and the three most-used cores in this game.",
+            styles["subtitle"],
+        ),
+    ]
+    if not context["players"]:
+        return story + [
+            Paragraph(
+                "Unavailable: this game lacks fully validated scoring coverage.", styles["body"]
+            )
+        ]
+    rows = [
+        _header_row(
+            ["PLAYER", "ON MIN", "OFF MIN", "ON MARGIN / 48", "OFF MARGIN / 48", "SWING / 48"],
+            styles,
+        )
+    ]
+    for row in context["players"]:
+        rows.append(
+            [
+                Paragraph(escape(row["name"]), styles["table"]),
+                value(row["on_minutes"]),
+                value(row["off_minutes"]),
+                value(row["on"], True),
+                value(row["off"], True),
+                value(row["swing"], True),
+            ]
+        )
+    story.extend(
+        [
+            Paragraph("Player on/off", styles["section"]),
+            Paragraph(
+                "Team scoring margin per 48 minutes during playing and rest time. "
+                "Swing = on minus off. Ordered by minutes played; single-game results "
+                "describe context, not player quality. A dash means no exposure.",
+                styles["small"],
+            ),
+            Spacer(1, 8),
+            _styled_table(rows, col_widths=[2, 0.6, 0.6, 0.9, 0.9, 0.8]),
+            Spacer(1, 8),
+            Paragraph("Three most-used cores", styles["section"]),
+            Paragraph(
+                "A core is three teammates sharing the floor while the other two spots can vary. "
+                "Listed by time together, not performance. Overlapping trio minutes and points "
+                "must not be added together.",
+                styles["small"],
+            ),
+            Spacer(1, 8),
+        ]
+    )
+    rows = [_header_row(["TRIO", "MIN", "PF-PA", "+/-", "MOST-USED COMPLETION"], styles)]
+    for row in context["trios"]:
+        rows.append(
+            [
+                Paragraph(escape(row["names"].replace(" | ", ", ")), styles["table"]),
+                value(row["minutes"]),
+                f"{row['points_for']}-{row['points_against']}",
+                _signed(row["margin"]),
+                Paragraph(
+                    f"{escape(row['partners'])}<br/>{row['partner_minutes']:.1f} min",
+                    styles["table"],
+                ),
+            ]
+        )
+    coverage = context["coverage"]
+    story.extend(
+        [
+            _styled_table(rows, col_widths=[2.35, 0.45, 0.7, 0.45, 2.05]),
+            Spacer(1, 10),
+            Paragraph(
+                f"Coverage: {coverage['covered_minutes']:.1f} team minutes "
+                f"({coverage['coverage']:.1f}% of the selected game). "
+                f"{coverage['boundary_points']} combined points at interval ends. "
+                "The existing end-inclusive scoring rule is preserved. All figures are "
+                "time-based; no possession ratings or causal player estimates are implied.",
+                styles["small"],
+            ),
+        ]
+    )
     return story
 
 

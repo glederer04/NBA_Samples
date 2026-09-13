@@ -109,3 +109,20 @@ def download_scenario(team: str):
     except Exception:
         current_app.logger.exception("Scenario PDF export failed")
         return report_error("The PDF could not be generated. Please retry in a moment.", 503)
+
+
+@reports.post("/player-plan.pdf")
+def download_player_plan():
+    """POST the exact saved snapshot; no long URLs, client blobs or re-optimization."""
+    import json
+
+    from rotation_lab.reporting.player_plan_report import generate_player_plan_report_bytes
+
+    if request.content_length is None or request.content_length > 300_000:
+        return report_error("The saved plan is missing or exceeds the report size limit.", 413)
+    try:
+        plan = json.loads(request.form.get("plan", ""))
+        data = generate_player_plan_report_bytes(plan)
+    except (ValueError, KeyError, TypeError, IndexError, AttributeError):
+        return report_error("This saved plan is invalid. Rebuild it in Scenario Planner.", 400)
+    return pdf_response((data, f"{plan['request']['team']}_{plan['id']}_player_minute_plan.pdf"))

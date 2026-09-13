@@ -224,3 +224,7 @@ The [September 2026 quality review](docs/quality-review-2026-09.md) documents re
 The [follow-up review](docs/quality-review-followup-2026-09.md) covers normalized dropdown logos, browser-native PDF downloads and previews, compact lineup names, corrected numeric filtering, reordered navigation, verification timings, and suggested next improvements.
 
 The [September 8 portfolio follow-up](docs/quality-review-2026-09-08.md) explains the deployment asset-path fix, shared game selection, evidence-based recommendation views, stint +/- colors, and boundary scoring. The [player analysis and planning roadmap](docs/player-analysis-and-planning-roadmap.md) specifies proposed on/off, trio, and player-minute-range planning features; on/off and trio analysis are now implemented, while player-minute planning remains future work. See [trio analysis and PDF release notes](docs/trio-analysis-release.md) for implementation, validation and the next planner steps.
+
+### Player-minute planning
+
+Scenario Planner now supports player availability, custom minute ranges, roles, rest/stint rules, locked windows, full-game schedules, saved alternatives and exact-plan PDF downloads. The original lineup allocation mode remains available. See [the release and methodology](docs/player-minute-planner-release.md).

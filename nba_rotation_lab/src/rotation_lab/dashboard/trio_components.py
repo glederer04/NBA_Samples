@@ -199,7 +199,17 @@ def show_trio(unit, team, key, start, end):
     def completion_rows(frame):
         return [
             [
-                r.partners,
+                html.Div(
+                    [
+                        r.partners,
+                        html.Br(),
+                        dcc.Link(
+                            "Plan with this five",
+                            href=f"/scenario-planner?team={team}&lineup={r.Index}",
+                            className="trio-plan-link",
+                        ),
+                    ]
+                ),
                 number(r.minutes),
                 int(r.games),
                 f"{r.share:.1f}%",

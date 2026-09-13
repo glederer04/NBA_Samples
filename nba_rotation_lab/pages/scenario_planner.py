@@ -20,6 +20,7 @@ from rotation_lab.dashboard.components import (
 )
 from rotation_lab.dashboard.components import get_team_options as get_dashboard_teams
 from rotation_lab.dashboard.data import get_planner_recommendations as get_lineup_recommendations
+from rotation_lab.dashboard.player_planning import layout as player_layout
 from rotation_lab.modeling import (
     LineupAllocation,
     RotationPlanProjection,
@@ -39,7 +40,7 @@ register_page(
 )
 
 
-def layout() -> html.Div:
+def legacy_layout() -> html.Div:
     """Create the interactive Scenario Planner page."""
 
     team_options = get_dashboard_teams()
@@ -804,3 +805,37 @@ def scenario_report_links(team, lineup_a, lineup_b, lineup_c, minutes_a, minutes
         return None, None, str(error)
     url = f"/reports/scenario/{quote(team, safe='')}.pdf?" + scenario_query(keys, minutes)
     return url, url + "&view=1", "2-page PDF · Current plan, comparison, and lineup detail."
+
+
+def layout(**kwargs):
+
+    return html.Div(
+        [
+            html.Div(
+                dcc.RadioItems(
+                    id="scenario-mode",
+                    options=[
+                        {"label": " Player-minute planner", "value": "players"},
+                        {"label": " Lineup allocation (original)", "value": "lineups"},
+                    ],
+                    value="players",
+                    inline=True,
+                ),
+                className="pp-mode",
+            ),
+            html.Div(
+                player_layout(team=kwargs.get("team", "NYK"), lineup=kwargs.get("lineup")),
+                id="scenario-player-mode",
+            ),
+            html.Div(legacy_layout(), id="scenario-lineup-mode", style={"display": "none"}),
+        ]
+    )
+
+
+@callback(
+    Output("scenario-player-mode", "style"),
+    Output("scenario-lineup-mode", "style"),
+    Input("scenario-mode", "value"),
+)
+def switch_planning_mode(mode):
+    return ({}, {"display": "none"}) if mode == "players" else ({"display": "none"}, {})

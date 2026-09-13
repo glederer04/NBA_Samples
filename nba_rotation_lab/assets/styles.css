@@ -1341,3 +1341,52 @@ body {
 .impact-column-labels { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .85fr) minmax(0, 1fr); gap: 12px; align-items: center; text-align: center; padding: 12px 0; margin-top: 24px; background: #fff; border-bottom: 2px solid #dce6ef; color: #3e607e; font-size: 12px; font-weight: 750; }
 .impact-column-labels span:nth-child(2) { text-transform: uppercase; font-size: 10px; letter-spacing: .06em; }
 @media (max-width: 640px) { .impact-column-labels { grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1fr); gap: 5px; font-size: 11px; } }
+
+/* Player-minute planner: editable inputs and a readable coaching schedule. */
+.pp-mode {max-width:1440px;margin:20px auto 0;padding:0 28px;color:var(--text-primary,#17243a);font-weight:600;}
+.pp-mode label {margin-right:24px;cursor:pointer;}
+.pp-page {gap:22px;}
+.pp-page .panel {padding:26px;margin:18px 0;}
+.pp-page h2 {font-size:21px;margin:22px 0 12px;}
+.pp-page h3 {font-size:17px;margin:18px 0 10px;}
+.pp-grid {display:flex;flex-wrap:wrap;gap:18px;align-items:end;margin:16px 0;}
+.pp-field {flex:1;min-width:210px;}
+.pp-field label {display:block;margin-bottom:7px;}
+.pp-note {color:#59677b;font-size:13px;line-height:1.65;margin:12px 0;}
+.pp-page button {cursor:pointer;margin:10px 0;padding:10px 16px;border-radius:8px;}
+.pp-page button:disabled {opacity:.5;cursor:default;}
+.pp-page .button-primary {background:#245cd1;color:#fff;border:1px solid #245cd1;font-weight:600;}
+.pp-page .button-secondary {background:#fff;color:#294268;border:1px solid #cbd5e1;font-weight:600;}
+.pp-details {border-top:1px solid #dfe6ef;margin-top:18px;padding:18px 0;}
+.pp-details summary {font-weight:650;cursor:pointer;color:#243957;}
+.pp-actions {display:flex;gap:12px;flex-wrap:wrap;}
+.pp-checks label {margin:8px 20px 8px 0;display:inline-block;}
+.pp-warning,.pp-success {padding:12px 16px;border-radius:8px;line-height:1.6;font-size:13px;}
+.pp-warning {background:#fff5df;color:#775010;border-left:3px solid #d79a2f;}
+.pp-success {background:#eaf5f0;color:#23624f;border-left:3px solid #398c72;}
+.pp-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0 12px;}
+.pp-metric {border:1px solid #e2e8f0;border-radius:10px;padding:18px;background:#f8fafc;}
+.pp-metric small {display:block;color:#59677b;font-size:12px;margin-bottom:8px;}
+.pp-metric strong {font-size:25px;color:#17243a;font-variant-numeric:tabular-nums;}
+.pp-table-wrap {overflow-x:auto;max-width:100%;}
+.pp-table {width:100%;border-collapse:collapse;font-size:13px;line-height:1.5;}
+.pp-table th {text-align:left;background:#edf2f8;color:#40516a;padding:11px;font-size:12px;white-space:nowrap;}
+.pp-table td {padding:12px 11px;border-bottom:1px solid #e2e8f0;font-variant-numeric:tabular-nums;}
+.pp-table td:first-child {font-weight:600;min-width:140px;}
+.pp-stint-card {border:1px solid #dbe4f2;border-left:3px solid #2563eb;border-radius:9px;padding:4px 18px;margin:14px 0 24px;background:#f8faff;}
+.pp-lineup-names {font-weight:600;color:#243957;line-height:1.7;}
+.pp-timeline {overflow-x:auto;}
+.pp-timeline .dash-graph {min-width:650px;}
+.pp-page input[type=number] {padding:10px;border:1px solid #cbd5e1;border-radius:6px;width:100%;}
+.pp-page .dash-table-container .dropdown {position:relative;}
+@media(max-width:700px) {
+ .pp-page .panel {padding:16px;}
+ .pp-metrics {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+ .pp-metric {padding:12px;}
+ .pp-metric strong {font-size:21px;}
+ .pp-field {min-width:180px;}
+ .pp-mode {padding:0 16px;}
+ .pp-mode label {display:block;margin-bottom:10px;}
+}
+.pp-page .dash-spreadsheet-inner td, .pp-page .dash-spreadsheet-inner th,
+.pp-page .dash-spreadsheet-inner input {font-family:Inter,Arial,sans-serif !important;}

@@ -42,7 +42,9 @@ Both four-page example Game Review PDFs were rendered and visually inspected pag
 
 Measured locally: cold season analysis took 0.44–0.45 seconds per team and cached reads about 0.2 ms. First game PDF HTTP requests took 0.65 seconds for NYK and 0.09 seconds for SAS; cached repeats took 2 ms. These are development-machine measurements, not hosting guarantees. The PDFs were 31–43 KB. Player comparison group headers now retain both player names while scrolling, so lower metric rows stay attributable.
 
-## Next: player-minute Scenario Planner
+## Player-minute Scenario Planner roadmap (now implemented)
+
+See [the planner release](player-minute-planner-release.md) for the implementation, calibration and remaining extensions. The original delivery plan is retained below for context.
 
 The next implementation should start with availability and custom minimum/target/maximum minutes for each player, not three preselected lineups. Keep the existing planner available until the new path passes validation.
 
